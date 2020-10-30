@@ -1,5 +1,7 @@
-# online_adversarial_attacks
+# Online Adversarial Attacks
 
+Creating the python virtual environment `conda env create -f environment.yml`. 
+After this you can type `source activate NoBox` to launch the environment.
 
 ## Folder Structure
 ```
