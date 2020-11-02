@@ -6,8 +6,6 @@ from torch.autograd import Variable
 from torch.distributions.multivariate_normal import MultivariateNormal
 import ipdb
 from torch.distributions import Normal
-from flows import *
-
 
 def entropy(input):
     max_input, _ = torch.max(input, 1)

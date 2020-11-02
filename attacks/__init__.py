@@ -4,10 +4,6 @@ import sys
 import os
 import random
 sys.path.insert(0, "..")  # Adds higher directory to python modules path.
-from attacks.autopgd_pt import APGDAttack
-from attacks.fab_pt import FABAttack
-from attacks.square_pt import SquareAttack
-from attacks.autopgd_pt import APGDAttack_targeted
 from classifiers import load_all_classifiers, load_list_classifiers, load_dict_classifiers
 from cnn_models import LeNet as Net
 from cnn_models import ResNet18

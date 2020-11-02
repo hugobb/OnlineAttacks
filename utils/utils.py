@@ -171,6 +171,17 @@ def create_loaders(args, augment=True, normalize=None, root='./data', num_test_s
         args.nc, args.h, args.w = 3,32,32
         args.clip_min = -1.
         args.clip_max = 1.
+    elif args.dataset == 'toy':
+        perms = []
+        for i in range(120):                        # (1) Draw N samples from permutations Universe U (#U = k!)
+            while True:                             # (2) Endless loop
+                perm = np.random.permutation(args.N)     # (3) Generate a random permutation form U
+                key = tuple(perm)
+                if key not in perms:                # (4) Check if permutation already has been drawn (hash table)
+                    perms.append(key)               # (5) Insert into set
+                    break
+                pass
+        trainloader, testloader = perms, None
     else:
         # Normalize image for ImageNet
         # normalize=utils.Normalize(mean=[0.485,0.456,0.406],std=[0.229,0.224,0.225])
