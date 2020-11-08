@@ -13,6 +13,7 @@ import numpy as np
 
 sys.path.append("..")  # Adds higher directory to python modules path.
 from online_algorithms import create_online_algorithm
+from utils.utils import seed_everything
 
 def toy_dataset(N, max_perms=120):
     perms = []
@@ -32,7 +33,7 @@ def toy_dataset(N, max_perms=120):
 def run_experiment(args, K, train_loader):
     offline_algorithm, online_algorithm = create_online_algorithm(args, args.online_type, args.N, K)
     num_perms = len(train_loader)
-    comp_ratio = 0.0
+    comp_ratio_list = []
     online_indices, offline_indices = None, None
 
     for i, perm in enumerate(train_loader):
@@ -43,8 +44,8 @@ def run_experiment(args, K, train_loader):
             offline_algorithm.action(perm[index], index)
         online_indices = set([x[1] for x in online_algorithm.S])
         offline_indices = set([x[1] for x in offline_algorithm.S])
-        comp_ratio += len(list(online_indices & offline_indices))
-    comp_ratio = comp_ratio / (K*num_perms)
+        comp_ratio_list.append(len(list(online_indices & offline_indices)))
+    comp_ratio = np.sum(comp_ratio_list) / (K*num_perms)
     print("Competitive Ratio for %s with K = %d is %f " %(args.online_type, K, comp_ratio))
     return comp_ratio
 
@@ -57,6 +58,8 @@ def main():
                         help='Size of datastream')
     parser.add_argument('--max_perms', type=int, default=120, metavar='P',
                         help='Maximum number of perms of the data stream')
+    parser.add_argument('--seed', type=int, metavar='S',
+                        help='random seed (default: None)')
     # Training
     parser.add_argument('--dataset', type=str, default='mnist')
     parser.add_argument('--model', type=str, default=None)
@@ -68,6 +71,7 @@ def main():
 
     args = parser.parse_args()
     args.dev = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    seed_everything(args.seed)
 
     if os.path.isfile("settings.json"):
         with open('settings.json') as f:
