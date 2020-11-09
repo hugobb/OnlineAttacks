@@ -1,9 +1,10 @@
-import os
-import torch
-import torch.nn as nn
+from torch import nn
 import torch.nn.functional as F
-import torch.utils.data
-from torchvision import datasets, transforms
+import torch
+from enum import Enum
+from argparse import Namespace
+import os
+
 
 class modelA(nn.Module):
     def __init__(self):
@@ -25,6 +26,7 @@ class modelA(nn.Module):
         x = self.fc2(x)
         return x
 
+
 class modelB(nn.Module):
     def __init__(self):
         super(modelB, self).__init__()
@@ -45,6 +47,7 @@ class modelB(nn.Module):
         x = self.fc(x)
         return x
 
+
 class modelC(nn.Module):
     def __init__(self):
         super(modelC, self).__init__()
@@ -62,6 +65,7 @@ class modelC(nn.Module):
         x = F.relu(self.fc1(x))
         x = self.fc2(x)
         return x
+
 
 class modelD(nn.Module):
     def __init__(self):
@@ -89,19 +93,42 @@ class modelD(nn.Module):
         x = self.fc5(x)
         return x
 
-def model_mnist(type=1):
-    '''
-    Defines MNIST model
-    '''
-    models = [modelA, modelB, modelC, modelD]
-    return models[type]()
+
+class MnistModel(Enum):
+    MODEL_A = "modelA"
+    MODEL_B = "modelB"
+    MODEL_C = "modelC"
+    MODEL_D = "modelD"
 
 
-def load_model(args, model_type=None, type=1, filename=None):
-    model = model_mnist(type=type)
-    if filename is None:
-        filename = os.path.join(args.dir_test_models, "pretrained_classifiers",
-                        args.dataset, "ensemble_adv_trained", model_type + '.pt')
- 
-    model.load_state_dict(torch.load(filename))
+__mnist_model_dict__ = {MnistModel.MODEL_A: modelA, MnistModel.MODEL_B: modelB, MnistModel.MODEL_C: modelC, MnistModel.MODEL_D: modelD}
+
+
+def train_mnist_classifier(model_type: MnistModel, num_epochs: int = 100):
+    model = load_mnist_classifier()
+    for i in range(num_epochs):
+        train_classifier(model)
+        test_classifier(model)
+
+
+def load_mnist_classifier(model_type: MnistModel, index: int = None, model_dir: str = None) -> nn.Module:
+    model = __mnist_model_dict__[model_type]
+    if index is None:
+        return model
+
+    filename = os.path.join(model_dir, "mnist", MnistModel.MODEL_A, "%i.pth"%index)
+    if os.path.exists(filename):
+        state_dict = torch.load(filename)
+        model.load_state_dict(state_dict)
+    else:
+        raise OSError("File not found !")
+    
     return model
+
+
+if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--model', type=MnistModel, choices=MnistModel)
+    args parser.parse_args()
+    train_mnist_classifier()
