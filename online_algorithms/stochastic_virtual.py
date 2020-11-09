@@ -1,32 +1,25 @@
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from operator import itemgetter
-from torch.autograd import grad, Variable
-import ipdb
+from base import Algorithm
 
 
-class stochastic_virtual(nn.Module):
-    def __init__(self, N, k, threshold):
+class StochasticVirtual(Algorithm):
+    def __init__(self, N: int, k: int, threshold: int):
         """ Construct Stochastic Virtual
         Parameters:
             N (int)     -- number of data points
-                k (int)     -- number of attacks
+            k (int)     -- number of attacks
         """
-        super(stochastic_virtual, self).__init__()
+        super().__init__(k)
         self.N = N
-        self.k = k
         self.threshold = threshold
         self.R = []
-        self.S = []
         self.sampling_phase = True
 
     def reset(self):
+        super().reset()
         self.R = []
-        self.S = []
         self.sampling_phase = True
 
-    def action(self, value, index):
+    def action(self, value: float, index: int):
         if self.sampling_phase:
             self.R.append([value, index])
             self.R.sort(key=lambda tup: tup[0], reverse=True)  # sorts in place
@@ -51,3 +44,8 @@ class stochastic_virtual(nn.Module):
                 self.R.sort(key=lambda tup: tup[0], reverse=True)  # sorts in place
                 self.R = self.R[:self.k]
 
+
+if __name__ == "__main__":
+    algorithm = StochasticVirtual(10, 1, 5)
+    algorithm.reset()
+    algorithm.action(1, 1)
