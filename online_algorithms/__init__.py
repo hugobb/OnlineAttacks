@@ -28,7 +28,7 @@ def create_online_algorithm(arg_parse: argparse.Namespace, online_type: str, N:
     return offline_algorithm, online_algorithm
 
 
-def compute_competitive_ratio(data_stream: Dataset, online_algorithm: Algorithm, offline_algorithm: Algorithm):
+def compute_competitive_ratio(data_stream: Dataset, online_algorithm: Algorithm, offline_algorithm: Algorithm) -> int:
     offline_algorithm.reset()
     online_algorithm.reset()
     for index, data in enumerate(data_stream):
