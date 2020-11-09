@@ -1,4 +1,5 @@
-from base import Algorithm
+from .base import Algorithm
+
 
 class OfflineAlgorithm(Algorithm):
     def __init__(self, k: int):
