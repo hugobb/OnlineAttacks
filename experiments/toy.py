@@ -12,25 +12,17 @@ import argparse
 import numpy as np
 
 sys.path.append("..")  # Adds higher directory to python modules path.
-from online_algorithms import create_online_algorithm
+from online_algorithms import create_online_algorithm, compute_competitive_ratio
 from utils.utils import seed_everything
 from datastream import ToyDatastream
+
 
 def run_experiment(args, K, train_loader):
     offline_algorithm, online_algorithm = create_online_algorithm(args, args.online_type, args.N, K)
     num_perms = len(train_loader)
     comp_ratio_list = []
-    online_indices, offline_indices = None, None
-
     for i, dataset in enumerate(train_loader):
-        offline_algorithm.reset()
-        online_algorithm.reset()
-        for index, data in enumerate(dataset):
-            online_algorithm.action(data, index)
-            offline_algorithm.action(data, index)
-        online_indices = set([x[1] for x in online_algorithm.S])
-        offline_indices = set([x[1] for x in offline_algorithm.S])
-        comp_ratio_list.append(len(list(online_indices & offline_indices)))
+        comp_ratio_list.append(compute_competitive_ratio(dataset, online_algorithm, offline_algorithm)
     comp_ratio = np.sum(comp_ratio_list) / (K*num_perms)
     print("Competitive Ratio for %s with K = %d is %f " %(args.online_type, K, comp_ratio))
     return comp_ratio
