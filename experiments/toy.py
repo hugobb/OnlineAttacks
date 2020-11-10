@@ -19,12 +19,12 @@ from utils.utils import seed_everything
 from datastream import ToyDatastream
 
 
-def run_experiment(args: NameSpace, K: int, train_loader: Dataset):
+def run_experiment(args: Namespace, K: int, train_loader: Dataset):
     offline_algorithm, online_algorithm = create_online_algorithm(args, args.online_type, args.N, K)
     num_perms = len(train_loader)
     comp_ratio_list = []
     for i, dataset in enumerate(train_loader):
-        comp_ratio_list.append(compute_competitive_ratio(dataset, online_algorithm, offline_algorithm)
+        comp_ratio_list.append(compute_competitive_ratio(dataset, online_algorithm, offline_algorithm))
     comp_ratio = np.sum(comp_ratio_list) / (K*num_perms)
     print("Competitive Ratio for %s with K = %d is %f " %(args.online_type, K, comp_ratio))
     return comp_ratio
