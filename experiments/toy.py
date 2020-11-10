@@ -14,13 +14,13 @@ from torch.utils.data import Dataset
 from argparse import Namespace
 
 sys.path.append("..")  # Adds higher directory to python modules path.
-from online_algorithms import create_online_algorithm, compute_competitive_ratio
+from online_algorithms import create_online_algorithm, compute_competitive_ratio, AlgorithmType
 from utils.utils import seed_everything
 from datastream import ToyDatastream
 
 
 def run_experiment(args: NameSpace, K: int, train_loader: Dataset):
-    offline_algorithm, online_algorithm = create_online_algorithm(args, args.online_type, args.N, K)
+    offline_algorithm, online_algorithm = create_online_algorithm(args.online_type, args.N, K)
     num_perms = len(train_loader)
     comp_ratio_list = []
     for i, dataset in enumerate(train_loader):
@@ -43,7 +43,7 @@ def main():
     # Training
     parser.add_argument('--dataset', type=str, default='mnist')
     parser.add_argument('--model', type=str, default=None)
-    parser.add_argument('--online_type', type=str, default='stochastic_virtual')
+    parser.add_argument('--online_type', type=AlgorithmType, choices=AlgorithmType, default=AlgorithmType.STOCHASTIC_VIRTUAL)
     # Bells
     parser.add_argument("--wandb", action="store_true", default=False, help='Use wandb for logging')
     parser.add_argument('--namestr', type=str, default='NoBox', \

@@ -6,6 +6,8 @@ from .stochastic_virtual import StochasticVirtual
 from .stochastic_optimistic import StochasticOptimistic
 from .base import Algorithm
 from torch.utils.data import Dataset
+from enum import Enum
+import tqdm
 
 __all__ = [
     "Algorithm",
@@ -15,13 +17,19 @@ __all__ = [
 ]
 
 
-def create_online_algorithm(arg_parse: argparse.Namespace, online_type: str, N:
+class AlgorithmType(Enum):
+    OFFLINE = "offline_algorithm"
+    STOCHASTIC_VIRTUAL = "stochastic_virtual"
+    STOCHASTIC_OPTIMISTIC = "stochastic_optimistic"
+
+
+def create_online_algorithm(online_type: AlgorithmType, N:
                             int, K: int, **kwargs: Any) -> (Algorithm, Algorithm):
     threshold = np.floor(N / np.e)
     offline_algorithm = OfflineAlgorithm(K)
-    if online_type == 'stochastic_virtual':
+    if online_type == AlgorithmType.STOCHASTIC_VIRTUAL:
         online_algorithm = StochasticVirtual(N, K, threshold)
-    elif online_type == 'stochastic_optimistic':
+    elif online_type == AlgorithmType.STOCHASTIC_OPTIMISTIC:
         online_algorithm = StochasticOptimistic(N, K, threshold)
     else:
         raise ValueError(f"Unknown online algo type: '{online_type}'.")
@@ -31,7 +39,7 @@ def create_online_algorithm(arg_parse: argparse.Namespace, online_type: str, N:
 def compute_competitive_ratio(data_stream: Dataset, online_algorithm: Algorithm, offline_algorithm: Algorithm) -> int:
     offline_algorithm.reset()
     online_algorithm.reset()
-    for index, data in enumerate(data_stream):
+    for index, data in tqdm.tqdm(enumerate(data_stream), total=len(data_stream)):
         online_algorithm.action(data, index)
         offline_algorithm.action(data, index)
     online_indices = set([x[1] for x in online_algorithm.S])

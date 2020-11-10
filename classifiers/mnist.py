@@ -10,7 +10,7 @@ import os
 import sys
 sys.path.insert(0, ".")  # Adds higher directory to python modules path.
 from utils.dataset import create_mnist_loaders
-from train import Trainer
+from classifiers.train import Trainer
 
 
 class modelA(nn.Module):
@@ -149,12 +149,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', default=MnistModel.MODEL_A, type=MnistModel, choices=MnistModel)
     parser.add_argument('--lr', type=float, default=1e-3)
-    parser.add_argument('--num_epochs', type=int, default=100)
+    parser.add_argument('--num_epochs', type=int, default=10)
     parser.add_argument('--filename', type=str, default="./pretrained_models/mnist/model.pth")
     parser.add_argument('--batch_size', type=int, default=256)
     parser.add_argument('--test_batch_size', type=int, default=1000)
     parser.add_argument('--data_dir', type=str, default='./data')
-
 
     args = parser.parse_args()
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device(None)

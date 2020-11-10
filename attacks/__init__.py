@@ -1,12 +1,14 @@
-from advertorch.attacks import PGDAttack, Attack
-from torch.nn import Module
-from argparse import Namespace
+from advertorch.attacks import PGDAttack
+from enum import Enum
 
 
-def create_attacker(attacker_type, classifier: Module, args: Namespace) -> Attack:
-    if attacker_type == "pgd":
-        attacker = PGDAttack(classifier, args)
-    else:
-        raise ValueError()
+class Attacker(Enum):
+    PGD_ATTACK = "pgd"
 
-    return attacker
+
+__attacker_dict__ = {Attacker.PGD_ATTACK: PGDAttack}
+
+
+def create_attacker(attacker: Attacker, classifier):
+    return __attacker_dict__[attacker](classifier)
+    
