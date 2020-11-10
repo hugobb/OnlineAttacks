@@ -5,12 +5,12 @@ from torch import optim
 from enum import Enum
 from argparse import Namespace
 import os
-from train import Trainer
 
 
 import sys
-sys.path.append("..")
-from utils.dataset import create_mnist_loaders 
+sys.path.insert(0, ".")  # Adds higher directory to python modules path.
+from utils.dataset import create_mnist_loaders
+from train import Trainer
 
 
 class modelA(nn.Module):
@@ -111,11 +111,11 @@ class MnistModel(Enum):
 __mnist_model_dict__ = {MnistModel.MODEL_A: modelA, MnistModel.MODEL_B: modelB, MnistModel.MODEL_C: modelC, MnistModel.MODEL_D: modelD}
 
 
-def train_mnist_classifier(model_type: MnistModel, filename: str, args: Namespace, num_epochs: int = 100) -> nn.Module:
-    train_loader, test_loader = create_mnist_loaders(args)
+def train_mnist_classifier(model_type: MnistModel, filename: str, args: Namespace, num_epochs: int = 100, device=None) -> nn.Module:
+    train_loader, test_loader = create_mnist_loaders(args.data_dir, args)
     model = load_mnist_classifier(model_type)
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
-    trainer = Trainer(model, train_loader, test_loader, optimizer, device=args.device)
+    trainer = Trainer(model, train_loader, test_loader, optimizer, device=device)
     
     for epoch in range(1, num_epochs):
         trainer.train(epoch)
@@ -130,7 +130,7 @@ def train_mnist_classifier(model_type: MnistModel, filename: str, args: Namespac
 
 
 def load_mnist_classifier(model_type: MnistModel, index: int = None, model_dir: str = None) -> nn.Module:
-    model = __mnist_model_dict__[model_type]
+    model = __mnist_model_dict__[model_type]()
     if index is None:
         return model
 
@@ -147,12 +147,17 @@ def load_mnist_classifier(model_type: MnistModel, index: int = None, model_dir: 
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model', type=MnistModel, choices=MnistModel)
+    parser.add_argument('--model', default=MnistModel.MODEL_A, type=MnistModel, choices=MnistModel)
     parser.add_argument('--lr', type=float, default=1e-3)
     parser.add_argument('--num_epochs', type=int, default=100)
-    parser.add_argument('--filename', tyep=str, default="./pretrained_models/mnist/model.pth")
+    parser.add_argument('--filename', type=str, default="./pretrained_models/mnist/model.pth")
+    parser.add_argument('--batch_size', type=int, default=256)
+    parser.add_argument('--test_batch_size', type=int, default=1000)
+    parser.add_argument('--data_dir', type=str, default='./data')
 
-    args.device = torch.device("cuda") if torch.cuda.is_available() else torch.device(None)
 
     args = parser.parse_args()
-    train_mnist_classifier(args.model, args.filename, args, args.num_epochs)
+    device = torch.device("cuda") if torch.cuda.is_available() else torch.device(None)
+
+    args = parser.parse_args()
+    train_mnist_classifier(args.model, args.filename, args, args.num_epochs, device=device)
