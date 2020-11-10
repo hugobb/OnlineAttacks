@@ -1,14 +1,21 @@
 from torch import nn
 import torch.nn.functional as F
 import torch
+from torch import optim
 from enum import Enum
 from argparse import Namespace
 import os
+from train import Trainer
+
+
+import sys
+sys.path.append("..")
+from utils.dataset import create_mnist_loaders 
 
 
 class modelA(nn.Module):
     def __init__(self):
-        super(modelA, self).__init__()
+        super().__init__()
         self.conv1 = nn.Conv2d(1, 64, 5)
         self.conv2 = nn.Conv2d(64, 64, 5)
         self.dropout1 = nn.Dropout(0.25)
@@ -16,7 +23,7 @@ class modelA(nn.Module):
         self.dropout2 = nn.Dropout(0.5)
         self.fc2 = nn.Linear(128, 10)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
         x = self.dropout1(x)
@@ -29,7 +36,7 @@ class modelA(nn.Module):
 
 class modelB(nn.Module):
     def __init__(self):
-        super(modelB, self).__init__()
+        super().__init__()
         self.dropout1 = nn.Dropout(0.2)
         self.conv1 = nn.Conv2d(1, 64, 8)
         self.conv2 = nn.Conv2d(64, 128, 6)
@@ -37,7 +44,7 @@ class modelB(nn.Module):
         self.dropout2 = nn.Dropout(0.5)
         self.fc = nn.Linear(128 * 12 * 12, 10)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.dropout1(x)
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
@@ -50,13 +57,13 @@ class modelB(nn.Module):
 
 class modelC(nn.Module):
     def __init__(self):
-        super(modelC, self).__init__()
+        super().__init__()
         self.conv1 = nn.Conv2d(1, 128, 3)
         self.conv2 = nn.Conv2d(128, 64, 3)
         self.fc1 = nn.Linear(64 * 5 * 5, 128)
         self.fc2 = nn.Linear(128, 10)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = torch.tanh(self.conv1(x))
         x = F.max_pool2d(x, 2)
         x = torch.tanh(self.conv2(x))
@@ -69,7 +76,7 @@ class modelC(nn.Module):
 
 class modelD(nn.Module):
     def __init__(self):
-        super(modelD, self).__init__()
+        super().__init__()
         self.fc1 = nn.Linear(1 * 28 * 28, 300)
         self.dropout1 = nn.Dropout(0.5)
         self.fc2 = nn.Linear(300, 300)
@@ -80,7 +87,7 @@ class modelD(nn.Module):
         self.dropout4 = nn.Dropout(0.5)
         self.fc5 = nn.Linear(300, 10)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = x.view(x.size(0), -1)
         x = F.relu(self.fc1(x))
         x = self.dropout1(x)
@@ -104,11 +111,22 @@ class MnistModel(Enum):
 __mnist_model_dict__ = {MnistModel.MODEL_A: modelA, MnistModel.MODEL_B: modelB, MnistModel.MODEL_C: modelC, MnistModel.MODEL_D: modelD}
 
 
-def train_mnist_classifier(model_type: MnistModel, num_epochs: int = 100):
-    model = load_mnist_classifier()
-    for i in range(num_epochs):
-        train_classifier(model)
-        test_classifier(model)
+def train_mnist_classifier(model_type: MnistModel, filename: str, args: Namespace, num_epochs: int = 100) -> nn.Module:
+    train_loader, test_loader = create_mnist_loaders(args)
+    model = load_mnist_classifier(model_type)
+    optimizer = optim.Adam(model.parameters(), lr=args.lr)
+    trainer = Trainer(model, train_loader, test_loader, optimizer, device=args.device)
+    
+    for epoch in range(1, num_epochs):
+        trainer.train(epoch)
+        trainer.test(epoch)
+
+    dirname = os.path.dirname(filename)
+    if not os.path.exists(dirname):
+        os.makedirs(dirname)
+
+    torch.save(model.state_dict(), filename)
+    return model
 
 
 def load_mnist_classifier(model_type: MnistModel, index: int = None, model_dir: str = None) -> nn.Module:
@@ -116,7 +134,7 @@ def load_mnist_classifier(model_type: MnistModel, index: int = None, model_dir: 
     if index is None:
         return model
 
-    filename = os.path.join(model_dir, "mnist", MnistModel.MODEL_A, "%i.pth"%index)
+    filename = os.path.join(model_dir, "mnist", model_type, "%i.pth"%index)
     if os.path.exists(filename):
         state_dict = torch.load(filename)
         model.load_state_dict(state_dict)
@@ -130,5 +148,11 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', type=MnistModel, choices=MnistModel)
-    args parser.parse_args()
-    train_mnist_classifier()
+    parser.add_argument('--lr', type=float, default=1e-3)
+    parser.add_argument('--num_epochs', type=int, default=100)
+    parser.add_argument('--filename', tyep=str, default="./pretrained_models/mnist/model.pth")
+
+    args.device = torch.device("cuda") if torch.cuda.is_available() else torch.device(None)
+
+    args = parser.parse_args()
+    train_mnist_classifier(args.model, args.filename, args, args.num_epochs)

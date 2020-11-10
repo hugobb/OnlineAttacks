@@ -1,5 +1,5 @@
-from toy import *
-from datastream import *
+from .toy_data import *
+from .datastream import *
 import torchvision
 from torchvision import transforms
 
