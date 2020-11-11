@@ -37,13 +37,15 @@ def create_online_algorithm(params: OnlineParams = OnlineParams()) -> (Algorithm
 def compute_competitive_ratio(data_stream: Iterable, online_algorithm: Algorithm, offline_algorithm: Algorithm) -> int:
     offline_algorithm.reset()
     online_algorithm.reset()
-    for index, data in tqdm.tqdm(enumerate(data_stream), total=len(data_stream)):
+    index = 0
+    for data in data_stream:
         if not isinstance(data, Iterable):
             data = [data]
         for value in data:
             value = float(value)
             online_algorithm.action(value, index)
             offline_algorithm.action(value, index)
+            index += 1
     online_indices = set([x[1] for x in online_algorithm.S])
     offline_indices = set([x[1] for x in offline_algorithm.S])
     comp_ratio = len(list(online_indices & offline_indices))

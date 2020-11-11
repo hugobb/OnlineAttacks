@@ -1,4 +1,4 @@
-import argparse
+
 import torch
 from torch.nn import CrossEntropyLoss
 from dataclasses import dataclass
@@ -6,6 +6,7 @@ from online_attacks.online_algorithms import create_online_algorithm, compute_co
 from online_attacks.classifiers.mnist import load_mnist_classifier, MnistModel, load_mnist_dataset
 from online_attacks.attacks import create_attacker, Attacker, AttackerParams
 from online_attacks.datastream import datastream
+from online_attacks.utils.parser import ArgumentParser
 import numpy as np
 
 
@@ -13,7 +14,7 @@ import numpy as np
 class MnistParams:
     attacker_type: Attacker = Attacker.PGD_ATTACK
     attacker_params: AttackerParams = AttackerParams()
-    online_params: OnlineParams = OnlineParams()
+    online_params: OnlineParams = OnlineParams(K=100, online_type=AlgorithmType.STOCHASTIC_OPTIMISTIC)
 
 
 def run(args, params: MnistParams = MnistParams()):
@@ -32,6 +33,7 @@ def run(args, params: MnistParams = MnistParams()):
 
     params.online_params.N = len(dataset)
     offline_algorithm, online_algorithm = create_online_algorithm(params.online_params)
+    print("Computing Competitive Ratio...")
     comp_ratio = compute_competitive_ratio(data_stream, online_algorithm, offline_algorithm)
     print(comp_ratio)
 
@@ -39,15 +41,10 @@ def run(args, params: MnistParams = MnistParams()):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
+    parser = ArgumentParser()
     
     # Online algorithm arguments
-    parser.add_argument('--online_type', type=AlgorithmType, default=AlgorithmType.STOCHASTIC_VIRTUAL,
-                         choices=AlgorithmType,)
-    parser.add_argument('--N', type=int, default=5, metavar='N',
-                        help='Size of datastream')
-    parser.add_argument('--K', type=int, default=1, metavar='K',
-                        help='Number of attacks to submit')
+    parser.add_config("mnist_params", MnistParams)
     
     # MNIST dataset arguments
     parser.add_argument('--data_dir', default="./data", )
@@ -64,5 +61,5 @@ if __name__ == '__main__':
     args = parser.parse_args()
     args.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
-    run(args)
+    run(args, args.mnist_params)
 
