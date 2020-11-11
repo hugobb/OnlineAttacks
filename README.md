@@ -12,9 +12,18 @@ It's also useful to add the `online_adversarial_attacks` path to your `PYTHONPAT
 Some scripts might not work otherwise.
 
 
-# Command to run Toy experiment
+## Command to run Toy experiment
 The import might not work, and myabe need to add current directory to `PYTHONPATH`
 `python online_attacks/experiments/toy.py --online_params.online_type stochastic_optimistic --online_params.N 100 --max_perms 1000 --K 10 `
+
+## Command to run Mnist experiment (work in progress)
+Currently load a random classifier and only evaluates competitive ratio and not attack success rate.
+`python online_attacks/experiments/mnist_online.py --params.online_params.online_type stochastic_optimistic --params.online_params.K 100`
+
+**TODO**:
+- Load source classifier and target classifier
+- Evaluate competitive ratio when online has access to true values and when online has access to fake values
+- Evalutate attack success rate
 
 ## Folder Structure
 ```
