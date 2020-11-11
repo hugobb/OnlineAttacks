@@ -19,9 +19,9 @@ class AlgorithmType(Enum):
 
 @dataclass
 class OnlineParams:
-    online_type: AlgorithmType = MISSING
-    N: int = MISSING
-    K: int = MISSING
+    online_type: AlgorithmType = AlgorithmType.STOCHASTIC_VIRTUAL
+    N: int = 5
+    K: int = 1
 
 
 def create_online_algorithm(params: OnlineParams = OnlineParams()) -> (Algorithm, Algorithm):
