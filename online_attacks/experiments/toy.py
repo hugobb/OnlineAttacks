@@ -56,9 +56,8 @@ def main():
         os.environ['WANDB_API_KEY'] = args.wandb_apikey
         wandb.init(project='Online-Attacks',
                    name='Online-Attack-{}-{}'.format("toy", args.namestr))
-
+    train_loader = ToyDatastream(args.online_params.N, args.max_perms)
     for k in range(1, args.K+1):
-        train_loader = ToyDatastream(args.online_params.N, args.max_perms)
         args.online_params.K = k
         comp_ratio = run_experiment(args.online_params, train_loader)
         if args.wandb:

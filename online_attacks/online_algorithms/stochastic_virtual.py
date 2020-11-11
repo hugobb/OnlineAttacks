@@ -1,4 +1,5 @@
 from .base import Algorithm
+import ipdb
 
 
 class StochasticVirtual(Algorithm):
@@ -29,8 +30,13 @@ class StochasticVirtual(Algorithm):
                 self.sampling_phase = False
         else:
             k_value, k_index = self.R[-1]
-
-            if value < k_value:
+            num_picked = len(self.S)
+            num_left_to_pick = self.k - num_picked
+            num_samples_left = self.N - index
+            if num_samples_left <= num_left_to_pick:
+                # Just Pick the last samples to exhaust K
+                self.S.append([value, index])
+            elif value < k_value:
                 # Don't pick or Update R
                 pass
             elif value > k_value and k_index <= self.threshold:
