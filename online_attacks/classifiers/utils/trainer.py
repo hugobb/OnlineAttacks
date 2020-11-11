@@ -3,7 +3,7 @@ from torch import nn
 from torch.utils.data import DataLoader
 from torch.optim import Optimizer
 import torch
-from utils.sls import Sls
+from online_attacks.utils.sls import Sls
 
 
 class Trainer:

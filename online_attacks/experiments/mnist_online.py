@@ -1,24 +1,32 @@
 import argparse
 import torch
 from torch.nn import CrossEntropyLoss
-
-import sys
-sys.path.insert(0, ".")
-from online_algorithms import create_online_algorithm, AlgorithmType, compute_competitive_ratio
-from classifiers.mnist import load_mnist_classifier, MnistModel
-from attacks import create_attacker, Attacker
-from datastream import datastream
-from utils.dataset import load_mnist_dataset
+from dataclasses import dataclass
+from online_attacks.online_algorithms import create_online_algorithm, compute_competitive_ratio, OnlineParams
+from online_attacks.classifiers.mnist import load_mnist_classifier, MnistModel
+from online_attacks.attacks import create_attacker, Attacker, AttackerParams
+from online_attacks.datastream import datastream
+from online_attacks.utils.dataset import load_mnist_dataset
 
 
-def main(args):
-    offline_algorithm, online_algorithm = create_online_algorithm(args.online_type, args.N, args.K)
-    
+@dataclass
+class MnistParams:
+    attacker_params: AttackerParams = AttackerParams()
+    online_params: OnlineParams = OnlineParams()
+
+
+def run(params: MnistParams = MnistParams()):
+    offline_algorithm, online_algorithm = create_online_algorithm(params.online_params)
+
+    ############### TODO: clean this part of code.
     classifier = load_mnist_classifier(args.model_type)
     classifier.to(args.device)
     criterion = CrossEntropyLoss()
+    ###############################
 
-    attacker = create_attacker(args.attacker, classifier)
+    attacker = create_attacker(classifier, params.attacker_params)
+
+    
     dataset = load_mnist_dataset(args.data_dir, args.test)
     transform = datastream.Compose([datastream.ToDevice(args.device), datastream.AttackerTransform(attacker),
                                     datastream.ClassifierTransform(classifier), datastream.LossTransform(criterion)])

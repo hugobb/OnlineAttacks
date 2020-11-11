@@ -1,16 +1,15 @@
-from torch import nn
+from enum import Enum
+import torch.nn as nn
 import torch.nn.functional as F
 import torch
-from torch import optim
-from enum import Enum
-from argparse import Namespace
 import os
 
 
-import sys
-sys.path.insert(0, ".")  # Adds higher directory to python modules path.
-from utils.dataset import create_mnist_loaders
-from classifiers.train import Trainer
+class MnistModel(Enum):
+    MODEL_A = "modelA"
+    MODEL_B = "modelB"
+    MODEL_C = "modelC"
+    MODEL_D = "modelD"
 
 
 class modelA(nn.Module):
@@ -101,40 +100,19 @@ class modelD(nn.Module):
         return x
 
 
-class MnistModel(Enum):
-    MODEL_A = "modelA"
-    MODEL_B = "modelB"
-    MODEL_C = "modelC"
-    MODEL_D = "modelD"
-
-
 __mnist_model_dict__ = {MnistModel.MODEL_A: modelA, MnistModel.MODEL_B: modelB, MnistModel.MODEL_C: modelC, MnistModel.MODEL_D: modelD}
 
 
-def train_mnist_classifier(model_type: MnistModel, filename: str, args: Namespace, num_epochs: int = 100, device=None) -> nn.Module:
-    train_loader, test_loader = create_mnist_loaders(args.data_dir, args)
-    model = load_mnist_classifier(model_type)
-    optimizer = optim.Adam(model.parameters(), lr=args.lr)
-    trainer = Trainer(model, train_loader, test_loader, optimizer, device=device)
-    
-    for epoch in range(1, num_epochs):
-        trainer.train(epoch)
-        trainer.test(epoch)
-
-    dirname = os.path.dirname(filename)
-    if not os.path.exists(dirname):
-        os.makedirs(dirname)
-
-    torch.save(model.state_dict(), filename)
-    return model
+def make_mnist_model(model: MnistModel) -> nn.Module:
+    return __mnist_model_dict__[model]()
 
 
-def load_mnist_classifier(model_type: MnistModel, index: int = None, model_dir: str = None) -> nn.Module:
-    model = __mnist_model_dict__[model_type]()
+def load_mnist_classifier(model: MnistModel, index: int = None, model_dir: str = None) -> nn.Module:
+    model = make_mnist_model(model)
     if index is None:
         return model
 
-    filename = os.path.join(model_dir, "mnist", model_type, "%i.pth"%index)
+    filename = os.path.join(model_dir, "mnist", model, "%i.pth"%index)
     if os.path.exists(filename):
         state_dict = torch.load(filename)
         model.load_state_dict(state_dict)
@@ -142,21 +120,3 @@ def load_mnist_classifier(model_type: MnistModel, index: int = None, model_dir: 
         raise OSError("File not found !")
     
     return model
-
-
-if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--model', default=MnistModel.MODEL_A, type=MnistModel, choices=MnistModel)
-    parser.add_argument('--lr', type=float, default=1e-3)
-    parser.add_argument('--num_epochs', type=int, default=10)
-    parser.add_argument('--filename', type=str, default="./pretrained_models/mnist/model.pth")
-    parser.add_argument('--batch_size', type=int, default=256)
-    parser.add_argument('--test_batch_size', type=int, default=1000)
-    parser.add_argument('--data_dir', type=str, default='./data')
-
-    args = parser.parse_args()
-    device = torch.device("cuda") if torch.cuda.is_available() else torch.device(None)
-
-    args = parser.parse_args()
-    train_mnist_classifier(args.model, args.filename, args, args.num_epochs, device=device)

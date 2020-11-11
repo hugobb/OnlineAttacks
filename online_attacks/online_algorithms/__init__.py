@@ -1,4 +1,3 @@
-from typing import Any
 import argparse
 import numpy as np
 from .offline_algorithm import OfflineAlgorithm
@@ -8,13 +7,8 @@ from .base import Algorithm
 from torch.utils.data import Dataset
 from enum import Enum
 import tqdm
-
-__all__ = [
-    "Algorithm",
-    "OfflineAlgorithm",
-    "StochasticVirtual",
-    "StochasticOptimistic",
-]
+from dataclasses import dataclass
+from omegaconf import MISSING
 
 
 class AlgorithmType(Enum):
@@ -23,14 +17,20 @@ class AlgorithmType(Enum):
     STOCHASTIC_OPTIMISTIC = "stochastic_optimistic"
 
 
-def create_online_algorithm(online_type: AlgorithmType, N:
-                            int, K: int, **kwargs: Any) -> (Algorithm, Algorithm):
-    threshold = np.floor(N / np.e)
-    offline_algorithm = OfflineAlgorithm(K)
-    if online_type == AlgorithmType.STOCHASTIC_VIRTUAL:
-        online_algorithm = StochasticVirtual(N, K, threshold)
-    elif online_type == AlgorithmType.STOCHASTIC_OPTIMISTIC:
-        online_algorithm = StochasticOptimistic(N, K, threshold)
+@dataclass
+class OnlineParams:
+    online_type: AlgorithmType = MISSING
+    N: int = MISSING
+    K: int = MISSING
+
+
+def create_online_algorithm(params: OnlineParams = OnlineParams()) -> (Algorithm, Algorithm):
+    threshold = np.floor(params.N / np.e)
+    offline_algorithm = OfflineAlgorithm(params.K)
+    if params.online_type == AlgorithmType.STOCHASTIC_VIRTUAL:
+        online_algorithm = StochasticVirtual(params.N, params.K, threshold)
+    elif params.online_type == AlgorithmType.STOCHASTIC_OPTIMISTIC:
+        online_algorithm = StochasticOptimistic(params.N, params.K, threshold)
     else:
         raise ValueError(f"Unknown online algo type: '{online_type}'.")
     return offline_algorithm, online_algorithm
