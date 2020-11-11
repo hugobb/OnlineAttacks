@@ -18,8 +18,8 @@ class ToyDatastream:
                 pass
 
     def __getitem__(self, index: int) -> Dataset:
-        tensor_data = torch.Tensor(self.perms[index]).view(-1,1)
-        return TensorDataset(tensor_data)
+        self.perms[index]
+        return self.perms[index]
 
     def __len__(self) -> int:
         return len(self.perms)

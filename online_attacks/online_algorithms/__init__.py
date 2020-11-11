@@ -1,14 +1,12 @@
-import argparse
 import numpy as np
 from .offline_algorithm import OfflineAlgorithm
 from .stochastic_virtual import StochasticVirtual
 from .stochastic_optimistic import StochasticOptimistic
 from .base import Algorithm
-from torch.utils.data import Dataset
 from enum import Enum
 import tqdm
 from dataclasses import dataclass
-from omegaconf import MISSING
+from typing import Iterable
 
 
 class AlgorithmType(Enum):
@@ -36,12 +34,16 @@ def create_online_algorithm(params: OnlineParams = OnlineParams()) -> (Algorithm
     return offline_algorithm, online_algorithm
 
 
-def compute_competitive_ratio(data_stream: Dataset, online_algorithm: Algorithm, offline_algorithm: Algorithm) -> int:
+def compute_competitive_ratio(data_stream: Iterable, online_algorithm: Algorithm, offline_algorithm: Algorithm) -> int:
     offline_algorithm.reset()
     online_algorithm.reset()
     for index, data in tqdm.tqdm(enumerate(data_stream), total=len(data_stream)):
-        online_algorithm.action(data, index)
-        offline_algorithm.action(data, index)
+        if not isinstance(data, Iterable):
+            data = [data]
+        for value in data:
+            value = float(value)
+            online_algorithm.action(value, index)
+            offline_algorithm.action(value, index)
     online_indices = set([x[1] for x in online_algorithm.S])
     offline_indices = set([x[1] for x in offline_algorithm.S])
     comp_ratio = len(list(online_indices & offline_indices))

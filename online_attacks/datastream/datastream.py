@@ -1,27 +1,40 @@
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 from torch import nn
 from advertorch.attacks import Attack
 import torch
 
 
-class Datastream(Dataset):
-    def __init__(self, dataset: Dataset, transform=None, permutation=None):
-        self.dataset = dataset
+class BatchDataStream:
+    def __init__(self, dataset: Dataset, batch_size: int = 1, transform=None):
+        self.dataloader = DataLoader(dataset, batch_size=batch_size)
         self.transform = transform
+
+    def __iter__(self):
+        self.iterator = iter(self.dataloader)
+        return self
+
+    def __next__(self):
+        x, target = self.iterator.next()
+        if self.transform is not None:
+            x, target = self.transform(x, target)
+        return x
+
+    def __len__(self):
+        return len(self.dataloader)
+
+
+class PermuteDataset(Dataset):
+    def __init__(self, dataset: Dataset, permutation):
+        self.dataset = dataset
         self.permutation = permutation
-        if permutation is not None:
-            assert len(permutation) == len(dataset)
+        assert len(permutation) == len(dataset)
 
     def __getitem__(self, index: int):
-        if self.permutation is not None:
-            index = self.permutation[index]
+        index = self.permutation[index]
         data, target = self.dataset[index]
-        data = data.unsqueeze(0)
-        target = torch.Tensor([target]).long()
+        target = torch.Tensor([target]).long().squeeze()
         
-        if self.transform is not None:
-            data, target = self.transform(data, target)
-        return data
+        return data, target
 
     def __len__(self) -> int:
         return len(self.dataset)
@@ -66,4 +79,6 @@ class LossTransform:
         self.criterion = criterion
     
     def __call__(self, data, target):
-        return self.criterion(data, target), target
+        output = self.criterion(data, target)
+        assert len(output) == len(data)
+        return output, target
