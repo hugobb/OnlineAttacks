@@ -11,6 +11,7 @@ import numpy as np
 
 @dataclass
 class MnistParams:
+    attacker_type: Attacker = Attacker.PGD_ATTACK
     attacker_params: AttackerParams = AttackerParams()
     online_params: OnlineParams = OnlineParams()
 
@@ -23,7 +24,7 @@ def run(args, params: MnistParams = MnistParams()):
     classifier.to(args.device)
     criterion = CrossEntropyLoss(reduction="none")
 
-    attacker = create_attacker(classifier, params.attacker_params)
+    attacker = create_attacker(classifier, params.attacker_type, params.attacker_params)
     
     transform = datastream.Compose([datastream.ToDevice(args.device), datastream.AttackerTransform(attacker),
                                     datastream.ClassifierTransform(classifier), datastream.LossTransform(criterion)])
