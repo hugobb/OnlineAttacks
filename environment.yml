@@ -116,4 +116,5 @@ dependencies:
     - wcwidth==0.1.9
     - werkzeug==1.0.1
     - wrapt==1.12.1
-
+    - nestargs
+    - omegaconf
