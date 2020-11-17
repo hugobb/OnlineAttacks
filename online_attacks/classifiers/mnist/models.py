@@ -107,7 +107,7 @@ def make_mnist_model(model: MnistModel) -> nn.Module:
     return __mnist_model_dict__[model]()
 
 
-def load_mnist_classifier(model: MnistModel, index: int = None, model_dir: str = None) -> nn.Module:
+def load_mnist_classifier(model: MnistModel, index: int = None, model_dir: str = None, device=None) -> nn.Module:
     model = make_mnist_model(model)
     if index is None:
         return model
@@ -119,4 +119,4 @@ def load_mnist_classifier(model: MnistModel, index: int = None, model_dir: str =
     else:
         raise OSError("File not found !")
     
-    return model
+    return model.to(device)

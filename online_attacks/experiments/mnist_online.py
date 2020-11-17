@@ -21,8 +21,9 @@ def run(args, params: MnistParams = MnistParams()):
     dataset = load_mnist_dataset(train=False)
     dataset = datastream.PermuteDataset(dataset, permutation=np.random.permutation(len(dataset)))
 
-    classifier = load_mnist_classifier(args.model_type)
-    classifier.to(args.device)
+    target_classifier = load_mnist_classifier(args.model_type, device=args.device)
+    source_classifier = load_mnist_classifier(args.model_type, device=args.device)
+
     criterion = CrossEntropyLoss(reduction="none")
 
     attacker = create_attacker(classifier, params.attacker_type, params.attacker_params)

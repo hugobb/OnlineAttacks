@@ -8,7 +8,7 @@ import numpy as np
 from torch.utils.data import Dataset
 
 sys.path.append("..")  # Adds higher directory to python modules path.
-from online_attacks.online_algorithms import create_online_algorithm, compute_competitive_ratio, AlgorithmType, OnlineParams
+from online_attacks.online_algorithms import create_online_algorithm, compute_competitive_ratio, AlgorithmType, OnlineParams, compute_indices
 from online_attacks.utils.utils import seed_everything
 from online_attacks.datastream import ToyDatastream
 from online_attacks.utils.parser import ArgumentParser
@@ -19,7 +19,8 @@ def run_experiment(params: OnlineParams, train_loader: Dataset):
     num_perms = len(train_loader)
     comp_ratio_list = []
     for i, dataset in enumerate(train_loader):
-        comp_ratio_list.append(compute_competitive_ratio(dataset, online_algorithm, offline_algorithm))
+        online_indices, offline_indices = compute_indices(dataset, [online_algorithm, offline_algorithm])
+        comp_ratio_list.append(compute_competitive_ratio(online_indices, offline_indices))
     comp_ratio = np.sum(comp_ratio_list) / (params.K*num_perms)
     print("Competitive Ratio for %s with K = %d is %f " %(params.online_type, params.K, comp_ratio))
     return comp_ratio

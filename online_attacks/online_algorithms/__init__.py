@@ -4,9 +4,9 @@ from .stochastic_virtual import StochasticVirtual
 from .stochastic_optimistic import StochasticOptimistic
 from .base import Algorithm
 from enum import Enum
-import tqdm
 from dataclasses import dataclass
-from typing import Iterable
+from typing import Iterable, List
+import tqdm
 
 
 class AlgorithmType(Enum):
@@ -34,19 +34,32 @@ def create_online_algorithm(params: OnlineParams = OnlineParams()) -> (Algorithm
     return offline_algorithm, online_algorithm
 
 
-def compute_competitive_ratio(data_stream: Iterable, online_algorithm: Algorithm, offline_algorithm: Algorithm) -> int:
-    offline_algorithm.reset()
-    online_algorithm.reset()
+def compute_indices(data_stream: Iterable, algorithm_list: List[Algorithm], pbar_flag=False) -> List[Iterable]:
+    for algorithm in algorithm_list:
+        algorithm.reset()
+
+    if pbar_flag:
+        pbar = tqdm.tqdm(total=len(data_stream))
+
     for index, data in enumerate(data_stream):
         if not isinstance(data, Iterable):
             data = [data]
         for value in data:
             value = float(value)
-            online_algorithm.action(value, index)
-            offline_algorithm.action(value, index)
+            for algorithm in algorithm_list:
+                algorithm.action(value, index)
             index += 1
-    online_indices = set([x[1] for x in online_algorithm.S])
-    offline_indices = set([x[1] for x in offline_algorithm.S])
+        
+        if pbar_flag:
+            pbar.update()
+    
+    indices_list = (algorithm.S for algorithm in algorithm_list)
+    return indices_list
+
+
+def compute_competitive_ratio(online_indices: Iterable, offline_indices: Iterable) -> int:
+    online_indices = set([x[1] for x in online_indices])
+    offline_indices = set([x[1] for x in offline_indices])
     comp_ratio = len(list(online_indices & offline_indices))
     return comp_ratio
 
