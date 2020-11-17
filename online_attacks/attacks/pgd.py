@@ -8,7 +8,7 @@ from .params import AttackerParams
 class PGDParams(AttackerParams):
     nb_iter: int = 40
     eps_iter: float = 0.01
-    rand_init: bool = True
+    rand_init: bool = False
     clip_min: float = 0.0
     clip_max: float = 1.0
     targeted: bool = False

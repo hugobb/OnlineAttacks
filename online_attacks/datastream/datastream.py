@@ -6,18 +6,14 @@ import torch
 
 class BatchDataStream:
     def __init__(self, dataset: Dataset, batch_size: int = 1, transform=None):
-        self.dataloader = DataLoader(dataset, batch_size=batch_size)
+        self.dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
         self.transform = transform
 
     def __iter__(self):
-        self.iterator = iter(self.dataloader)
-        return self
-
-    def __next__(self):
-        x, target = self.iterator.next()
-        if self.transform is not None:
-            x, target = self.transform(x, target)
-        return x
+        for x, target in self.dataloader:
+            if self.transform is not None:
+                x, target = self.transform(x, target)
+            yield x
 
     def __len__(self):
         return len(self.dataloader)

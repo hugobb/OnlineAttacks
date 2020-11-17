@@ -41,7 +41,8 @@ def compute_indices(data_stream: Iterable, algorithm_list: List[Algorithm], pbar
     if pbar_flag:
         pbar = tqdm.tqdm(total=len(data_stream))
 
-    for index, data in enumerate(data_stream):
+    index = 0
+    for data in data_stream:
         if not isinstance(data, Iterable):
             data = [data]
         for value in data:
@@ -52,8 +53,11 @@ def compute_indices(data_stream: Iterable, algorithm_list: List[Algorithm], pbar
         
         if pbar_flag:
             pbar.update()
+
+    if pbar_flag:
+        pbar.close()
     
-    indices_list = (algorithm.S for algorithm in algorithm_list)
+    indices_list = tuple(algorithm.S for algorithm in algorithm_list)
     return indices_list
 
 
