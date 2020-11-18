@@ -1,4 +1,4 @@
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, SubsetRandomSampler, BatchSampler
 from torch import nn
 from advertorch.attacks import Attack
 import torch
@@ -6,8 +6,10 @@ import torch
 
 class BatchDataStream:
     def __init__(self, dataset: Dataset, batch_size: int = 1, transform=None):
+        self.dataset = dataset
         self.dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
         self.transform = transform
+        self.batch_size = batch_size
 
     def __iter__(self):
         for x, target in self.dataloader:
@@ -17,6 +19,15 @@ class BatchDataStream:
 
     def __len__(self):
         return len(self.dataloader)
+
+    def subset(self, index, batch_size=None):
+        if batch_size is None:
+            batch_size = self.batch_size
+        dataloader = DataLoader(self.dataset, batch_size=batch_size, sampler=SubsetRandomSampler(index))
+        for x, target in dataloader:
+            if self.transform is not None:
+                x, target = self.transform(x, target)
+            yield x, target
 
 
 class PermuteDataset(Dataset):

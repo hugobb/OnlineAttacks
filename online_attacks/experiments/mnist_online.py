@@ -4,7 +4,7 @@ from torch.nn import CrossEntropyLoss
 from dataclasses import dataclass
 from online_attacks.online_algorithms import create_online_algorithm, compute_competitive_ratio, OnlineParams, AlgorithmType, compute_indices
 from online_attacks.classifiers.mnist import load_mnist_classifier, MnistModel, load_mnist_dataset
-from online_attacks.attacks import create_attacker, Attacker, AttackerParams
+from online_attacks.attacks import create_attacker, Attacker, AttackerParams, compute_attack_success_rate
 from online_attacks.datastream import datastream
 from online_attacks.utils.parser import ArgumentParser
 import numpy as np
@@ -50,6 +50,31 @@ def run(args, params: MnistParams = MnistParams()):
     print("Comp ratio source online vs target offline: %.2f"%(comp_ratio/params.online_params.K))
     comp_ratio = compute_competitive_ratio(source_offline_indices, target_offline_indices)
     print("Comp ratio target online vs target offline: %.2f"%(comp_ratio/params.online_params.K))
+
+    transform = datastream.Compose([datastream.ToDevice(args.device), datastream.AttackerTransform(attacker),
+                                    datastream.ClassifierTransform(target_classifier)])
+    target_stream = datastream.BatchDataStream(dataset, batch_size=1000, transform=transform)
+    
+    
+    random_indices = np.random.permutation(len(dataset))[:params.online_params.K]
+    stream = target_stream.subset(random_indices)
+    fool_rate = compute_attack_success_rate(stream)
+    print("Attack success rate (Random): %.4f"%fool_rate)
+    
+    source_online_indices = [x[1] for x in source_online_indices]
+    stream = target_stream.subset(source_online_indices)
+    fool_rate = compute_attack_success_rate(stream)
+    print("Attack success rate (Source Online): %.4f"%fool_rate)
+    
+    source_offline_indices = [x[1] for x in source_offline_indices]
+    stream = target_stream.subset(source_offline_indices)
+    fool_rate = compute_attack_success_rate(stream)
+    print("Attack success rate (Source Offline): %.4f"%fool_rate)
+
+    target_offline_indices = [x[1] for x in target_offline_indices]
+    stream = target_stream.subset(target_offline_indices)
+    fool_rate = compute_attack_success_rate(stream)
+    print("Attack success rate (Source Offline): %.4f"%fool_rate)
 
     return comp_ratio
 
