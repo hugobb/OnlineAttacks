@@ -20,10 +20,14 @@ class OnlineParams:
     online_type: AlgorithmType = AlgorithmType.STOCHASTIC_VIRTUAL
     N: int = 5
     K: int = 1
+    threshold: int = 0 # This will be reset in create_online_algorithm
 
 
 def create_online_algorithm(params: OnlineParams = OnlineParams()) -> (Algorithm, Algorithm):
-    threshold = np.floor(params.N / np.e)
+    if params.threshold == 0:
+        threshold = np.floor(params.N / np.e)
+    else:
+        threshold = params.threshold
     offline_algorithm = OfflineAlgorithm(params.K)
     if params.online_type == AlgorithmType.STOCHASTIC_VIRTUAL:
         online_algorithm = StochasticVirtual(params.N, params.K, threshold)
@@ -50,13 +54,13 @@ def compute_indices(data_stream: Iterable, algorithm_list: List[Algorithm], pbar
             for algorithm in algorithm_list:
                 algorithm.action(value, index)
             index += 1
-        
+
         if pbar_flag:
             pbar.update()
 
     if pbar_flag:
         pbar.close()
-    
+
     indices_list = tuple(algorithm.S for algorithm in algorithm_list)
     return indices_list
 

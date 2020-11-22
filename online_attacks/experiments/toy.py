@@ -41,8 +41,9 @@ def main():
 
     # Bells
     parser.add_argument("--wandb", action="store_true", default=False, help='Use wandb for logging')
-    parser.add_argument('--namestr', type=str, default='NoBox', \
+    parser.add_argument('--namestr', type=str, default='Online-Attacks', \
             help='additional info in output filename to describe experiments')
+
 
     args = parser.parse_args()
     args.dev = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -62,7 +63,7 @@ def main():
         args.online_params.K = k
         comp_ratio = run_experiment(args.online_params, train_loader)
         if args.wandb:
-            model_name = "Competitive Ratio " + args.online_type
+            model_name = "Competitive Ratio " + args.online_params.online_type.value
             wandb.log({model_name: comp_ratio, "K": k})
 
 
