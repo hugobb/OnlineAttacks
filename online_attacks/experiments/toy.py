@@ -38,6 +38,8 @@ def main():
                         help='Maximum number of perms of the data stream')
     parser.add_argument('--seed', type=int, metavar='S',
                         help='random seed (default: None)')
+    parser.add_argument("--exhaust", action="store_true", default=False,
+            help='Exhaust K')
 
     # Bells
     parser.add_argument("--wandb", action="store_true", default=False, help='Use wandb for logging')

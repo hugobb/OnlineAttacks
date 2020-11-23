@@ -3,17 +3,20 @@ import ipdb
 
 
 class StochasticVirtual(Algorithm):
-    def __init__(self, N: int, k: int, threshold: int):
+    def __init__(self, N: int, k: int, threshold: int, exhaust:bool):
         """ Construct Stochastic Virtual
         Parameters:
-            N (int)     -- number of data points
-            k (int)     -- number of attacks
+            N (int)           -- number of data points
+            k (int)           -- number of attacks
+            threshold (int)   -- threshold for t
+            exhaust (bool)    -- whether to exhaust K
         """
         super().__init__(k)
         self.N = N
         self.threshold = threshold
         self.R = []
         self.sampling_phase = True
+        self.exhaust = exhaust
 
     def reset(self):
         super().reset()
@@ -33,7 +36,7 @@ class StochasticVirtual(Algorithm):
             num_picked = len(self.S)
             num_left_to_pick = self.k - num_picked
             num_samples_left = self.N - index
-            if num_samples_left <= num_left_to_pick:
+            if num_samples_left <= num_left_to_pick and self.exhaust:
                 # Just Pick the last samples to exhaust K
                 self.S.append([value, index])
             elif value < k_value:

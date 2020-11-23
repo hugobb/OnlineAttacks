@@ -1,18 +1,20 @@
 from .base import Algorithm
 
-
 class StochasticOptimistic(Algorithm):
-    def __init__(self, N: int, k : int, threshold: int):
-        """ Construct Stochastic Virtual
+    def __init__(self, N: int, k : int, threshold: int, exhaust: bool):
+        """ Construct Stochastic Optimistic
         Parameters:
-            N (int)     -- number of data points
-                k (int)     -- number of attacks
+            N (int)           -- number of data points
+            k (int)           -- number of attacks
+            threshold (int)   -- threshold for t
+            exhaust (bool)    -- whether to exhaust K
         """
         super().__init__(k)
         self.N = N
         self.threshold = threshold
         self.R = []
         self.sampling_phase = True
+        self.exhaust = exhaust
 
     def reset(self):
         super().reset()
@@ -33,7 +35,7 @@ class StochasticOptimistic(Algorithm):
             num_samples_left = self.N - index
             if len(self.R) > 0:
                 k_value, k_index = self.R[-1]
-                if num_samples_left <= num_left_to_pick:
+                if num_samples_left <= num_left_to_pick and self.exhaust:
                     # Just Pick the last samples to exhaust K
                     self.S.append([value, index])
                 elif value > k_value:

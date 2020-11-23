@@ -21,6 +21,7 @@ class OnlineParams:
     N: int = 5
     K: int = 1
     threshold: int = 0 # This will be reset in create_online_algorithm
+    exhaust: bool = False # Exhaust K
 
 
 def create_online_algorithm(params: OnlineParams = OnlineParams()) -> (Algorithm, Algorithm):
@@ -30,9 +31,11 @@ def create_online_algorithm(params: OnlineParams = OnlineParams()) -> (Algorithm
         threshold = params.threshold
     offline_algorithm = OfflineAlgorithm(params.K)
     if params.online_type == AlgorithmType.STOCHASTIC_VIRTUAL:
-        online_algorithm = StochasticVirtual(params.N, params.K, threshold)
+        online_algorithm = StochasticVirtual(params.N, params.K, threshold,
+                params.exhaust)
     elif params.online_type == AlgorithmType.STOCHASTIC_OPTIMISTIC:
-        online_algorithm = StochasticOptimistic(params.N, params.K, threshold)
+        online_algorithm = StochasticOptimistic(params.N, params.K, threshold,
+                params.exhaust)
     else:
         raise ValueError(f"Unknown online algo type: '{online_type}'.")
     return offline_algorithm, online_algorithm
