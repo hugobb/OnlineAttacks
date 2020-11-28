@@ -2,6 +2,7 @@ import numpy as np
 from .offline_algorithm import OfflineAlgorithm
 from .stochastic_virtual import StochasticVirtual
 from .stochastic_optimistic import StochasticOptimistic
+from .stochastic_modified_virtual import StochasticModifiedVirtual
 from .base import Algorithm
 from enum import Enum
 from dataclasses import dataclass
@@ -13,6 +14,7 @@ class AlgorithmType(Enum):
     OFFLINE = "offline_algorithm"
     STOCHASTIC_VIRTUAL = "stochastic_virtual"
     STOCHASTIC_OPTIMISTIC = "stochastic_optimistic"
+    STOCHASTIC_MODIFIED_VIRTUAL = "stochastic_modified_virtual"
 
 
 @dataclass
@@ -35,6 +37,9 @@ def create_online_algorithm(params: OnlineParams = OnlineParams()) -> (Algorithm
                 params.exhaust)
     elif params.online_type == AlgorithmType.STOCHASTIC_OPTIMISTIC:
         online_algorithm = StochasticOptimistic(params.N, params.K, threshold,
+                params.exhaust)
+    elif params.online_type == AlgorithmType.STOCHASTIC_MODIFIED_VIRTUAL:
+        online_algorithm = StochasticModifiedVirtual(params.N, params.K, threshold,
                 params.exhaust)
     else:
         raise ValueError(f"Unknown online algo type: '{online_type}'.")
