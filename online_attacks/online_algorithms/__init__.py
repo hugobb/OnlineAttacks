@@ -5,7 +5,7 @@ from .stochastic_optimistic import StochasticOptimistic
 from .base import Algorithm
 from enum import Enum
 from dataclasses import dataclass
-from typing import Iterable, List
+from typing import Iterable, List, Union
 import tqdm
 
 
@@ -24,12 +24,12 @@ class OnlineParams:
     exhaust: bool = False # Exhaust K
 
 
-def create_online_algorithm(params: OnlineParams = OnlineParams()) -> (Algorithm, Algorithm):
+def create_algorithm(params: OnlineParams = OnlineParams()):
     if params.threshold == 0:
         threshold = np.floor(params.N / np.e)
     else:
         threshold = params.threshold
-    offline_algorithm = OfflineAlgorithm(params.K)
+
     if params.online_type == AlgorithmType.STOCHASTIC_VIRTUAL:
         online_algorithm = StochasticVirtual(params.N, params.K, threshold,
                 params.exhaust)
@@ -38,10 +38,19 @@ def create_online_algorithm(params: OnlineParams = OnlineParams()) -> (Algorithm
                 params.exhaust)
     else:
         raise ValueError(f"Unknown online algo type: '{online_type}'.")
+    
+    return online_algorithm
+
+
+def create_online_algorithm(params: OnlineParams = OnlineParams()) -> (Algorithm, Algorithm):
+    offline_algorithm = OfflineAlgorithm(params.K)
+    online_algorithm = create_algorithm(params)
     return offline_algorithm, online_algorithm
 
 
-def compute_indices(data_stream: Iterable, algorithm_list: List[Algorithm], pbar_flag=False) -> List[Iterable]:
+def compute_indices(data_stream: Iterable, algorithm_list: Union[Algorithm, List[Algorithm]], pbar_flag=False) -> Union[Iterable, List[Iterable]]:
+    if isinstance(algorithm_list, Algorithm):
+        algorithm_list = (algorithm_list, ) 
     for algorithm in algorithm_list:
         algorithm.reset()
 

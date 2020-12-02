@@ -5,20 +5,52 @@ from dataclasses import dataclass
 from online_attacks.online_algorithms import create_online_algorithm, compute_competitive_ratio, OnlineParams, AlgorithmType, compute_indices
 from online_attacks.classifiers.mnist import load_mnist_classifier, MnistModel, load_mnist_dataset
 from online_attacks.attacks import create_attacker, Attacker, AttackerParams, compute_attack_success_rate
+from online_attacks.attacks.pgd import PGDParams
 from online_attacks.datastream import datastream
 from online_attacks.utils.parser import ArgumentParser
 import numpy as np
+import os
+import torchvision
+import math
 
 
 @dataclass
 class MnistParams:
-    attacker_type: Attacker = Attacker.PGD_ATTACK
+    attacker_type: Attacker = Attacker.CW_ATTACK
     attacker_params: AttackerParams = AttackerParams()
-    online_params: OnlineParams = OnlineParams(K=100, online_type=AlgorithmType.STOCHASTIC_OPTIMISTIC)
+    online_params: OnlineParams = OnlineParams(K=100, online_type=AlgorithmType.STOCHASTIC_VIRTUAL)
     model_dir: str = "/checkpoint/hberard/OnlineAttack/pretained_models/"
 
 
-def run(args, params: MnistParams = MnistParams()):
+def load(params):
+    dataset = load_mnist_dataset(train=False)
+    dataset = datastream.PermuteDataset(dataset, permutation=np.random.permutation(len(dataset)))
+
+    # TODO: Control the loading of the model in a better way.
+    target_classifier = load_mnist_classifier("modelA", index=0, model_dir=params.model_dir, device=device, eval=True)
+    source_classifier = load_mnist_classifier("modelA", index=1, model_dir=params.model_dir, device=device, eval=True)
+
+    criterion = CrossEntropyLoss(reduction="none")
+
+    attacker = create_attacker(source_classifier, params.attacker_type, params.attacker_params)
+    
+    transform = datastream.Compose([datastream.ToDevice(args.device), datastream.AttackerTransform(attacker),
+                                    datastream.ClassifierTransform(target_classifier), datastream.LossTransform(criterion)])
+    target_stream = datastream.BatchDataStream(dataset, batch_size=1000, transform=transform)
+
+    transform = datastream.Compose([datastream.ToDevice(args.device), datastream.AttackerTransform(attacker),
+                                    datastream.ClassifierTransform(source_classifier), datastream.LossTransform(criterion)])
+    source_stream = datastream.BatchDataStream(dataset, batch_size=1000, transform=transform)
+
+    offline_algorithm, online_algorithm = create_online_algorithm(params.online_params)
+
+
+def run(params):
+    
+    source_online_indices = compute_indices(source_stream, [online_algorithm], pbar_flag=True)
+
+
+def main(args, params: MnistParams = MnistParams()):
     dataset = load_mnist_dataset(train=False)
     dataset = datastream.PermuteDataset(dataset, permutation=np.random.permutation(len(dataset)))
 
@@ -55,7 +87,6 @@ def run(args, params: MnistParams = MnistParams()):
                                     datastream.ClassifierTransform(target_classifier)])
     target_stream = datastream.BatchDataStream(dataset, batch_size=1000, transform=transform)
     
-    
     random_indices = np.random.permutation(len(dataset))[:params.online_params.K]
     stream = target_stream.subset(random_indices)
     fool_rate = compute_attack_success_rate(stream)
@@ -76,6 +107,16 @@ def run(args, params: MnistParams = MnistParams()):
     fool_rate = compute_attack_success_rate(stream)
     print("Attack success rate (Source Offline): %.4f"%fool_rate)
 
+    stream = datastream.BatchDataStream(dataset)
+    stream = stream.subset(source_online_indices, batch_size=len(source_online_indices))
+    x, target = next(stream)
+    output_dir = os.path.join(args.output_dir, "img")
+    os.makedirs(output_dir, exist_ok=True)
+    torchvision.utils.save_image(x, os.path.join(output_dir, "clean.png"), nrow=int(math.sqrt(len(source_online_indices))))
+
+    x = attacker.perturb(x.to(args.device))
+    torchvision.utils.save_image(x, os.path.join(output_dir, "attack.png"), nrow=int(math.sqrt(len(source_online_indices))))
+
     return comp_ratio
 
 
@@ -88,6 +129,7 @@ if __name__ == '__main__':
     # MNIST dataset arguments
     parser.add_argument('--data_dir', default="./data", )
     parser.add_argument('--test', action="store_true")
+    parser.add_argument('--output_dir', default="./results")
 
 
     # MNIST classifier arguments
@@ -100,5 +142,5 @@ if __name__ == '__main__':
     args = parser.parse_args()
     args.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
-    run(args, args.mnist_params)
+    main(args, args.mnist_params)
 

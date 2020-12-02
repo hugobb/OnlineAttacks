@@ -1,23 +1,27 @@
 from argparse import Namespace
-from typing import Callable
+from typing import Callable, Optional
 from omegaconf import OmegaConf
 import submitit
 
 
 class Launcher:
-    def __init__(self, run: Callable[[Namespace], None]):
-        self.run = run
- 
-    def launch(self, args):
+    @classmethod
+    def run(cls, args):
+        raise NotImplementedError()
+
+    @classmethod
+    def launch(cls, args):
         if args.slurm:
-            self.run_on_slurm(args)
+            cls.run_on_slurm(args)
         else:
-            self.run_locally(args)
+            cls.run_locally(args)
 
-    def run_locally(self, args):
-        self.run(args)
+    @classmethod
+    def run_locally(cls, args):
+        cls.run(args)
 
-    def run_on_slurm(self, args):
+    @classmethod
+    def run_on_slurm(cls, args):
         slurm_config = OmegaConf.load(args.slurm)
         nb_gpus = slurm_config.get("gpus_per_node", 1)
         mem_by_gpu = slurm_config.get("mem_by_gpu", 60)
@@ -34,5 +38,5 @@ class Launcher:
                                    gpus_per_node=nb_gpus,
                                    mem_gb=mem_by_gpu * nb_gpus,)
 
-        job = executor.submit(self.run, args)
+        job = executor.submit(cls.run, args)
         print(f"{job.job_id}")

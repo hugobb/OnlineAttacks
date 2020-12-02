@@ -15,6 +15,8 @@ class MnistModel(Enum):
 class modelA(nn.Module):
     def __init__(self):
         super().__init__()
+        self.num_classes = 10
+
         self.conv1 = nn.Conv2d(1, 64, 5)
         self.conv2 = nn.Conv2d(64, 64, 5)
         self.dropout1 = nn.Dropout(0.25)
@@ -36,6 +38,8 @@ class modelA(nn.Module):
 class modelB(nn.Module):
     def __init__(self):
         super().__init__()
+        self.num_classes = 10
+
         self.dropout1 = nn.Dropout(0.2)
         self.conv1 = nn.Conv2d(1, 64, 8)
         self.conv2 = nn.Conv2d(64, 128, 6)
@@ -57,6 +61,8 @@ class modelB(nn.Module):
 class modelC(nn.Module):
     def __init__(self):
         super().__init__()
+        self.num_classes = 10
+
         self.conv1 = nn.Conv2d(1, 128, 3)
         self.conv2 = nn.Conv2d(128, 64, 3)
         self.fc1 = nn.Linear(64 * 5 * 5, 128)
@@ -76,6 +82,8 @@ class modelC(nn.Module):
 class modelD(nn.Module):
     def __init__(self):
         super().__init__()
+        self.num_classes = 10
+
         self.fc1 = nn.Linear(1 * 28 * 28, 300)
         self.dropout1 = nn.Dropout(0.5)
         self.fc2 = nn.Linear(300, 300)

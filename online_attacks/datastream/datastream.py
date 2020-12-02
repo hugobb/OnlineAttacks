@@ -5,8 +5,11 @@ import torch
 
 
 class BatchDataStream:
-    def __init__(self, dataset: Dataset, batch_size: int = 1, transform=None):
+    def __init__(self, dataset: Dataset, batch_size: int = 1, transform=None, permutation=None):
         self.dataset = dataset
+        if permutation is not None:
+            self.dataset = PermuteDataset(self.dataset, permutation=permutation) 
+
         self.dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
         self.transform = transform
         self.batch_size = batch_size
@@ -66,11 +69,16 @@ class ToDevice:
 
 
 class AttackerTransform:
-    def __init__(self, attacker: Attack):
+    def __init__(self, attacker: Attack, target=False):
         self.attacker = attacker
+        self.target = target
     
     def __call__(self, data, target):
-        return self.attacker.perturb(data, target), target
+        if self.target:
+            data = self.attacker.perturb(data, target)
+        else:
+            data = self.attacker.perturb(data)
+        return data, target
 
 
 class ClassifierTransform:

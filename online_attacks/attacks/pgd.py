@@ -1,4 +1,4 @@
-from advertorch.attacks import PGDAttack
+from advertorch.attacks import PGDAttack, L1PGDAttack, L2PGDAttack, LinfPGDAttack
 from dataclasses import dataclass
 from torch.nn import Module
 from .params import AttackerParams
@@ -6,17 +6,26 @@ from .params import AttackerParams
 
 @dataclass
 class PGDParams(AttackerParams):
-    nb_iter: int = 40
+    nb_iter: int = 10
     eps_iter: float = 0.01
-    rand_init: bool = False
-    clip_min: float = 0.0
-    clip_max: float = 1.0
-    targeted: bool = False
+    rand_init: bool = True
+    norm: str = "Linf"
 
 
 def make_pgd_attacker(classifier: Module, params: PGDParams = PGDParams()) -> PGDAttack:
     
-    attacker = PGDAttack(classifier, eps=params.eps, nb_iter=params.nb_iter,
+    if params.norm == "Linf": 
+        attacker = LinfPGDAttack(classifier, eps=params.eps, nb_iter=params.nb_iter,
+                         eps_iter=params.eps_iter, rand_init=params.rand_init,
+                         clip_min=params.clip_min, clip_max=params.clip_max,
+                         targeted=params.targeted)
+    elif params.norm == "L2": 
+        attacker = L2PGDAttack(classifier, eps=params.eps, nb_iter=params.nb_iter,
+                         eps_iter=params.eps_iter, rand_init=params.rand_init,
+                         clip_min=params.clip_min, clip_max=params.clip_max,
+                         targeted=params.targeted)
+    elif params.norm == "L1": 
+        attacker = L1PGDAttack(classifier, eps=params.eps, nb_iter=params.nb_iter,
                          eps_iter=params.eps_iter, rand_init=params.rand_init,
                          clip_min=params.clip_min, clip_max=params.clip_max,
                          targeted=params.targeted)
