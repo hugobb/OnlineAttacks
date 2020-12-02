@@ -26,30 +26,32 @@ class OnlineParams:
     exhaust: bool = False # Exhaust K
 
 
-def create_algorithm(params: OnlineParams = OnlineParams()):
+def create_algorithm(online_type: AlgorithmType, params: OnlineParams = OnlineParams()):
     if params.threshold == 0:
         threshold = np.floor(params.N / np.e)
     else:
         threshold = params.threshold
 
-    if params.online_type == AlgorithmType.STOCHASTIC_VIRTUAL:
-        online_algorithm = StochasticVirtual(params.N, params.K, threshold,
+    if online_type == AlgorithmType.STOCHASTIC_VIRTUAL:
+        algorithm = StochasticVirtual(params.N, params.K, threshold,
                 params.exhaust)
-    elif params.online_type == AlgorithmType.STOCHASTIC_OPTIMISTIC:
-        online_algorithm = StochasticOptimistic(params.N, params.K, threshold,
+    elif online_type == AlgorithmType.STOCHASTIC_OPTIMISTIC:
+        algorithm = StochasticOptimistic(params.N, params.K, threshold,
                 params.exhaust)
-    elif params.online_type == AlgorithmType.STOCHASTIC_MODIFIED_VIRTUAL:
-        online_algorithm = StochasticModifiedVirtual(params.N, params.K, threshold,
+    elif online_type == AlgorithmType.STOCHASTIC_MODIFIED_VIRTUAL:
+        algorithm = StochasticModifiedVirtual(params.N, params.K, threshold,
                 params.exhaust)
+    elif online_type == AlgorithmType.OFFLINE:
+        algorithm = OfflineAlgorithm(params.K)
     else:
         raise ValueError(f"Unknown online algo type: '{online_type}'.")
     
-    return online_algorithm
+    return algorithm
 
 
 def create_online_algorithm(params: OnlineParams = OnlineParams()) -> (Algorithm, Algorithm):
-    offline_algorithm = OfflineAlgorithm(params.K)
-    online_algorithm = create_algorithm(params)
+    offline_algorithm = create_algorithm(AlgorithmType.OFFLINE, params)
+    online_algorithm = create_algorithm(params.online_type, params)
     return offline_algorithm, online_algorithm
 
 

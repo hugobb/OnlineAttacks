@@ -19,7 +19,7 @@ class Params:
     model_dir: str = "/checkpoint/hberard/OnlineAttack/pretained_models/"
     attacker_type: Attacker = Attacker.FGSM_ATTACK
     attacker_params: AttackerParams = AttackerParams()
-    online_params: OnlineParams = OnlineParams(online_type=AlgorithmType.STOCHASTIC_VIRTUAL, K=100)
+    online_params: OnlineParams = OnlineParams(online_type=AlgorithmType.STOCHASTIC_OPTIMISTIC, K=100)
     logger_params: LoggerParams = LoggerParams("/checkpoint/hberard/OnlineAttack/results")
     seed: int = 1234
 
@@ -39,12 +39,12 @@ def run(params: Params):
     transform = datastream.Compose([datastream.ToDevice(device), datastream.AttackerTransform(attacker),
                                     datastream.ClassifierTransform(source_classifier), datastream.LossTransform(CrossEntropyLoss(reduction="none"))])
 
-    record = {"hparams": OmegaConf.to_container(params), "runs": []}
+    algorithm = create_algorithm(params.online_params.online_type, params.online_params)
 
+    record = {"hparams": OmegaConf.to_container(params), "runs": []}
     for i in range(params.num_runs):
         permutation = torch.randperm(len(dataset))
         source_stream = datastream.BatchDataStream(dataset, batch_size=1000, transform=transform, permutation=permutation)
-        algorithm = create_algorithm(params.online_params)
         indices = compute_indices(source_stream, [algorithm], pbar_flag=True)[0]
         record["runs"].append({"permutation": permutation.tolist(), "indices": indices})
     

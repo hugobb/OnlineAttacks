@@ -21,9 +21,7 @@ Currently load a random classifier and only evaluates competitive ratio and not 
 `python online_attacks/experiments/mnist_online.py --params.online_params.online_type stochastic_optimistic --params.online_params.K 100`
 
 **TODO**:
-- Load source classifier and target classifier
-- Evaluate competitive ratio when online has access to true values and when online has access to fake values
-- Evalutate attack success rate
+- Right now the different algorithms are evaluated on different permutations, should we evaluate them on the same permuations ? (We can use a fixed random generator to generate the permutations, this should enforce that the permuation are the same) or (we can generate a list of permutations in a txt file, and load it) -> I prefer the 2nd solution.  
 
 ## Folder Structure
 ```

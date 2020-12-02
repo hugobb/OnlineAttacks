@@ -4,6 +4,7 @@ import uuid
 import json
 import os
 from enum import Enum
+import glob
 
 
 @dataclass
@@ -29,5 +30,20 @@ class Logger:
         filename = os.path.join(self.path, name + ".json")
         with open(filename, "w+") as f:
             json.dump(record, f, cls=EnumEncoder)
-        print("Saved record under %s"%filename)
+        print("Saved record under %s" % filename)
         
+    @staticmethod
+    def load_record(name):
+        with open(name, "w+") as f:
+            record = json.load(f)
+        return record
+
+    def load_all_record(self):
+        path = os.path.join(self.params.save_dir, "*/*.json")
+        list_filenames = glob.glob(path)
+        list_records = []
+        for filename in list_filenames:
+            record = Logger.load_record(filename)
+            list_records.append(record)
+
+
