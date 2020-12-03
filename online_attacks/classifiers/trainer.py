@@ -65,8 +65,8 @@ class Trainer:
         test_loss = 0
         correct = 0
         adv_correct = 0
-        with torch.no_grad():
-            for data, target in self.test_loader:
+        for data, target in self.test_loader:
+            with torch.no_grad():
                 data, target = data.to(self.device), target.to(self.device)
                 output = self.model(data)
                 loss = self.criterion(output, target)
@@ -76,9 +76,10 @@ class Trainer:
                 pred = output.max(1, keepdim=True)[1]
                 correct += pred.eq(target.view_as(pred)).sum().item()
 
-                if self.attacker is not None:
-                    data = self.attacker.perturb(data, target)
-                    output = self.model(ata)
+            if self.attacker is not None:
+                data = self.attacker.perturb(data, target)
+                with torch.no_grad():
+                    output = self.model(data)
                     pred = output.max(1, keepdim=True)[1]
                     adv_correct += pred.eq(target.view_as(pred)).sum().item()
 
