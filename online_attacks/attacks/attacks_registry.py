@@ -5,9 +5,19 @@ from .params import AttackerParams
 
 
 class Attacker(Enum):
+    NONE = "none"  # Utility for training classifier without any attacker 
     PGD_ATTACK = "pgd"
     FGSM_ATTACK = "fgsm"
     CW_ATTACK = "cw"
+
+
+# Defines a dummy attacker
+class NoAttacker(Attack):
+    def __init__(self):
+        pass
+    
+    def perturb(self, x, y=None):
+        return x
 
 
 def create_attacker(classifier: Module, attacker_type: Attacker,  params: AttackerParams) -> Attack:
@@ -22,6 +32,8 @@ def create_attacker(classifier: Module, attacker_type: Attacker,  params: Attack
         from .cw_pgd import make_cw_attacker, CWParams
         params = CWParams(**params)
         attacker = make_cw_attacker(classifier, params)
+    elif attacker_type == Attacker.NONE:
+        attacker = NoAttacker()
     else:
         raise ValueError()
     

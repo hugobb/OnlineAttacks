@@ -16,7 +16,7 @@ from online_attacks.utils import seed_everything
 class Params:
     num_runs: int = 5
     model_type: MnistModel = MnistModel.MODEL_A
-    index: int = 0
+    model_name: str = "0"
     model_dir: str = "/checkpoint/hberard/OnlineAttack/pretained_models/"
     attacker_type: Attacker = Attacker.FGSM_ATTACK
     attacker_params: AttackerParams = AttackerParams()
@@ -34,7 +34,7 @@ def run(params: Params):
 
     params.online_params.N = len(dataset)
 
-    source_classifier = load_mnist_classifier(params.model_type, index=params.index, model_dir=params.model_dir, device=device, eval=True)
+    source_classifier = load_mnist_classifier(params.model_type, name=params.model_name, model_dir=params.model_dir, device=device, eval=True)
     attacker = create_attacker(source_classifier, params.attacker_type, params.attacker_params)
 
     transform = datastream.Compose([datastream.ToDevice(device), datastream.AttackerTransform(attacker),

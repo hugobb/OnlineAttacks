@@ -12,6 +12,7 @@ import online_attacks.classifiers.mnist as mnist
 from online_attacks.classifiers.dataset import DatasetType
 from online_attacks.classifiers.mnist.models import MnistModel
 from online_attacks.launcher import Launcher
+from online_attacks.attacks import Attacker
 
 
 class TrainClassifier(Launcher):
@@ -21,8 +22,14 @@ class TrainClassifier(Launcher):
         if args.dataset == DatasetType.MNIST:
             params = OmegaConf.structured(mnist.TrainingParams)
             params.model_type = args.model_type
-            params.name = args.name
             params.train_on_test = args.train_on_test
+            params.name = ""
+            if args.robust:
+                params.attacker = Attacker.PGD_ATTACK
+                params.name = "%s_"%params.attacker.name
+            params.name += "test_" if params.train_on_test else "train_"
+            params.name += str(args.name)
+
             mnist.train(params, device=device)
         else:
             raise ValueError()
@@ -32,9 +39,10 @@ class TrainClassifier(Launcher):
         parser = argparse.ArgumentParser()
         parser.add_argument("--dataset", default=DatasetType.MNIST, type=DatasetType, choices=DatasetType)
         parser.add_argument("--model_type", nargs='+', type=MnistModel, choices=MnistModel)
-        parser.add_argument("--train_on_test", type=bool, default=False)
+        parser.add_argument("--train_on_test", action="store_true")
         parser.add_argument("--num_models", default=1, type=int)
         parser.add_argument("--slurm", type=str, default="")
+        parser.add_argument("--robust", action="store_true")
         return parser
 
 

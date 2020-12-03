@@ -7,6 +7,7 @@ from .params import MnistTrainingParams
 from .dataset import create_mnist_loaders
 from .models import load_mnist_classifier
 from online_attacks.classifiers.trainer import Trainer
+from online_attacks.attacks import create_attacker
 
 
 def train_mnist(params: MnistTrainingParams = MnistTrainingParams(), device: Optional[torch.device] = None) -> nn.Module:
@@ -15,12 +16,12 @@ def train_mnist(params: MnistTrainingParams = MnistTrainingParams(), device: Opt
     optimizer = optim.Adam(model.parameters(), lr=params.lr)
     if params.train_on_test:
         train_loader, test_loader = test_loader, train_loader
-    trainer = Trainer(model, train_loader, test_loader, optimizer, device=device)
+    attacker = create_attacker(model, params.attacker, params.attacker_params)
+    trainer = Trainer(model, train_loader, test_loader, optimizer, attacker=attacker, device=device)
     
     filename = None
     if params.save_model:
-        name = "test" if params.train_on_test else "train"
-        filename = os.path.join(params.save_dir, "mnist", params.model_type.value, "%s_%s.pth"%(name,params.name))
+        filename = os.path.join(params.save_dir, "mnist", params.model_type.value, "%s.pth"%(params.name))
         dirname = os.path.dirname(filename)
         if not os.path.exists(dirname):
             os.makedirs(dirname)

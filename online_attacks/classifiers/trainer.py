@@ -4,17 +4,19 @@ from torch.utils.data import DataLoader
 from torch.optim import Optimizer
 import torch
 from online_attacks.utils.sls import Sls
+from advertorch.context import ctx_noparamgrad_and_eval
 
 
 class Trainer:
     def __init__(self, model: Module, train_loader: DataLoader, test_loader: DataLoader, optimizer: Optimizer,
-                 criterion: Module = nn.CrossEntropyLoss(), device=None, logger=None):
+                 criterion: Module = nn.CrossEntropyLoss(), attacker=None, device=None, logger=None):
         self.model = model
         self.criterion = criterion
         self.train_loader = train_loader
         self.test_loader = test_loader
 
         self.optimizer = optimizer
+        self.attacker = attacker
         self.logger = logger
         
         self.device = device
@@ -27,6 +29,10 @@ class Trainer:
         total = 0 
         for batch_idx, (data, target) in enumerate(self.train_loader):
             data, target = data.to(self.device), target.to(self.device)
+            if self.attacker is not None:
+                with ctx_noparamgrad_and_eval(self.model):
+                    data = self.attacker.perturb(data, target)
+            
             self.optimizer.zero_grad()
 
             output = self.model(data)
@@ -58,6 +64,7 @@ class Trainer:
         self.model.eval()
         test_loss = 0
         correct = 0
+        adv_correct = 0
         with torch.no_grad():
             for data, target in self.test_loader:
                 data, target = data.to(self.device), target.to(self.device)
@@ -69,14 +76,26 @@ class Trainer:
                 pred = output.max(1, keepdim=True)[1]
                 correct += pred.eq(target.view_as(pred)).sum().item()
 
+                if self.attacker is not None:
+                    data = self.attacker.perturb(data, target)
+                    output = self.model(ata)
+                    pred = output.max(1, keepdim=True)[1]
+                    adv_correct += pred.eq(target.view_as(pred)).sum().item()
+
         test_loss /= len(self.test_loader.dataset)
 
         acc = 100. * correct / len(self.test_loader.dataset)
+        adv_acc = 100. * adv_correct / len(self.test_loader.dataset)
 
         if self.logger is None:
-            print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'\
-                .format(test_loss, correct, len(self.test_loader.dataset), acc))
+            log_output = 'Test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(test_loss, correct, len(self.test_loader.dataset), acc)
+            if self.attacker is not None:
+                log_output += ', Adv Accuracy: {}/{} ({:.0f}'.format(adv_correct, len(self.test_loader.dataset), adv_acc)
+            print(log_output)
         else:
-            self.logger.write(dict(test_loss=test_loss, test_accuracy=acc), epoch)
+            results = dict(test_loss=test_loss, test_accuracy=acc)
+            if self.attacker is not None:
+                results["adv_accuracy"] = adv_acc
+            self.logger.write(results, epoch)
 
         return acc

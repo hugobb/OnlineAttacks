@@ -3,6 +3,7 @@ from argparse import Namespace
 from omegaconf import OmegaConf, MISSING
 from .models import MnistModel
 from online_attacks.classifiers.dataset import DatasetParams
+from online_attacks.attacks import Attacker, AttackerParams
 
 
 @dataclass
@@ -15,3 +16,5 @@ class MnistTrainingParams:
     save_model: bool = True
     save_dir: str = "./pretained_models"
     train_on_test: bool = False
+    attacker: Attacker = Attacker.NONE
+    attacker_params: AttackerParams = AttackerParams()

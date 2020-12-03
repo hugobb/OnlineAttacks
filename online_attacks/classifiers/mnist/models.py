@@ -115,10 +115,10 @@ def make_mnist_model(model: MnistModel) -> nn.Module:
     return __mnist_model_dict__[model]()
 
 
-def load_mnist_classifier(model_type: MnistModel, index: int = None, model_dir: str = None, device=None, eval=False) -> nn.Module:
+def load_mnist_classifier(model_type: MnistModel, name: str = None, model_dir: str = None, device=None, eval=False) -> nn.Module:
     model = make_mnist_model(model_type)
-    if index is not None:
-        filename = os.path.join(model_dir, "mnist", model_type.value, "%i.pth"%index)
+    if name is not None:
+        filename = os.path.join(model_dir, "mnist", model_type.value, "%s.pth"%name)
         if os.path.exists(filename):
             state_dict = torch.load(filename)
             model.load_state_dict(state_dict)
