@@ -2,9 +2,10 @@ from dataclasses import dataclass
 import torch
 from torch.nn import CrossEntropyLoss
 from omegaconf import OmegaConf
+import numpy as np
 
 from online_attacks.classifiers.mnist import load_mnist_classifier, load_mnist_dataset, MnistModel
-from online_attacks.attacks import create_attacker, Attacker, AttackerParams
+from online_attacks.attacks import create_attacker, Attacker, AttackerParams, compute_attack_success_rate
 from online_attacks.datastream import datastream
 from online_attacks.online_algorithms import create_algorithm, OnlineParams, compute_indices, AlgorithmType
 from online_attacks.utils.logger import Logger, LoggerParams
@@ -19,8 +20,8 @@ class Params:
     model_dir: str = "/checkpoint/hberard/OnlineAttack/pretained_models/"
     attacker_type: Attacker = Attacker.FGSM_ATTACK
     attacker_params: AttackerParams = AttackerParams()
-    online_params: OnlineParams = OnlineParams(online_type=AlgorithmType.STOCHASTIC_OPTIMISTIC, K=100)
-    logger_params: LoggerParams = LoggerParams("/checkpoint/hberard/OnlineAttack/results")
+    online_params: OnlineParams = OnlineParams(online_type=AlgorithmType.STOCHASTIC_MODIFIED_VIRTUAL, K=1000)
+    logger_params: LoggerParams = LoggerParams(save_dir="/checkpoint/hberard/OnlineAttack/results")
     seed: int = 1234
 
 
@@ -38,19 +39,23 @@ def run(params: Params):
 
     transform = datastream.Compose([datastream.ToDevice(device), datastream.AttackerTransform(attacker),
                                     datastream.ClassifierTransform(source_classifier), datastream.LossTransform(CrossEntropyLoss(reduction="none"))])
-
+    
     algorithm = create_algorithm(params.online_params.online_type, params.online_params)
 
     record = {"hparams": OmegaConf.to_container(params), "runs": []}
     for i in range(params.num_runs):
         permutation = torch.randperm(len(dataset))
         source_stream = datastream.BatchDataStream(dataset, batch_size=1000, transform=transform, permutation=permutation)
-        indices = compute_indices(source_stream, [algorithm], pbar_flag=True)[0]
+        indices = compute_indices(source_stream, [algorithm], pbar_flag=False)[0]
         record["runs"].append({"permutation": permutation.tolist(), "indices": indices})
     
     logger.save_record(record)
+    logger.save_hparams(params)
 
 
 if __name__ == "__main__":
-    params = OmegaConf.structured(Params())
-    run(params)
+    for algorithm in AlgorithmType:
+        params = OmegaConf.structured(Params())
+        params.online_params.online_type = algorithm
+        run(params)
+

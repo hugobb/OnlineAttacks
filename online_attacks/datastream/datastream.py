@@ -10,7 +10,7 @@ class BatchDataStream:
         if permutation is not None:
             self.dataset = PermuteDataset(self.dataset, permutation=permutation) 
 
-        self.dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+        self.dataloader = DataLoader(self.dataset, batch_size=batch_size, shuffle=False)
         self.transform = transform
         self.batch_size = batch_size
 

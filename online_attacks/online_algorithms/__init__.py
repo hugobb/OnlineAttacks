@@ -3,7 +3,7 @@ from .offline_algorithm import OfflineAlgorithm
 from .stochastic_virtual import StochasticVirtual
 from .stochastic_optimistic import StochasticOptimistic
 from .stochastic_modified_virtual import StochasticModifiedVirtual
-from .base import Algorithm
+from .base import Algorithm, RandomAlgorithm
 from enum import Enum
 from dataclasses import dataclass
 from typing import Iterable, List, Union
@@ -15,6 +15,7 @@ class AlgorithmType(Enum):
     STOCHASTIC_VIRTUAL = "stochastic_virtual"
     STOCHASTIC_OPTIMISTIC = "stochastic_optimistic"
     STOCHASTIC_MODIFIED_VIRTUAL = "stochastic_modified_virtual"
+    RANDOM = "random"
 
 
 @dataclass
@@ -43,6 +44,8 @@ def create_algorithm(online_type: AlgorithmType, params: OnlineParams = OnlinePa
                 params.exhaust)
     elif online_type == AlgorithmType.OFFLINE:
         algorithm = OfflineAlgorithm(params.K)
+    elif online_type == AlgorithmType.RANDOM:
+        algorithm = RandomAlgorithm(params.N, params.K)
     else:
         raise ValueError(f"Unknown online algo type: '{online_type}'.")
     

@@ -16,38 +16,10 @@ import math
 
 @dataclass
 class MnistParams:
-    attacker_type: Attacker = Attacker.CW_ATTACK
+    attacker_type: Attacker = Attacker.FGSM_ATTACK
     attacker_params: AttackerParams = AttackerParams()
     online_params: OnlineParams = OnlineParams(K=100, online_type=AlgorithmType.STOCHASTIC_VIRTUAL)
     model_dir: str = "/checkpoint/hberard/OnlineAttack/pretained_models/"
-
-
-def load(params):
-    dataset = load_mnist_dataset(train=False)
-    dataset = datastream.PermuteDataset(dataset, permutation=np.random.permutation(len(dataset)))
-
-    # TODO: Control the loading of the model in a better way.
-    target_classifier = load_mnist_classifier("modelA", index=0, model_dir=params.model_dir, device=device, eval=True)
-    source_classifier = load_mnist_classifier("modelA", index=1, model_dir=params.model_dir, device=device, eval=True)
-
-    criterion = CrossEntropyLoss(reduction="none")
-
-    attacker = create_attacker(source_classifier, params.attacker_type, params.attacker_params)
-    
-    transform = datastream.Compose([datastream.ToDevice(args.device), datastream.AttackerTransform(attacker),
-                                    datastream.ClassifierTransform(target_classifier), datastream.LossTransform(criterion)])
-    target_stream = datastream.BatchDataStream(dataset, batch_size=1000, transform=transform)
-
-    transform = datastream.Compose([datastream.ToDevice(args.device), datastream.AttackerTransform(attacker),
-                                    datastream.ClassifierTransform(source_classifier), datastream.LossTransform(criterion)])
-    source_stream = datastream.BatchDataStream(dataset, batch_size=1000, transform=transform)
-
-    offline_algorithm, online_algorithm = create_online_algorithm(params.online_params)
-
-
-def run(params):
-    
-    source_online_indices = compute_indices(source_stream, [online_algorithm], pbar_flag=True)
 
 
 def main(args, params: MnistParams = MnistParams()):
