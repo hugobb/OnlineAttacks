@@ -2,10 +2,10 @@ from dataclasses import dataclass
 import torch
 from torch.nn import CrossEntropyLoss
 from omegaconf import OmegaConf
-import numpy as np
+from typing import Dict, Any
 
 from online_attacks.classifiers.mnist import load_mnist_classifier, load_mnist_dataset, MnistModel
-from online_attacks.attacks import create_attacker, Attacker, AttackerParams, compute_attack_success_rate
+from online_attacks.attacks import create_attacker, Attacker, AttackerParams
 from online_attacks.datastream import datastream
 from online_attacks.online_algorithms import create_algorithm, OnlineParams, compute_indices, AlgorithmType
 from online_attacks.utils.logger import Logger, LoggerParams
@@ -13,15 +13,15 @@ from online_attacks.utils import seed_everything
 
 
 @dataclass
-class Params:
+class Params(Dict[str, Any]):
     num_runs: int = 5
     model_type: MnistModel = MnistModel.MODEL_A
-    model_name: str = "0"
+    model_name: str = "PGD_ATTACK_train_0"
     model_dir: str = "/checkpoint/hberard/OnlineAttack/pretained_models/"
     attacker_type: Attacker = Attacker.FGSM_ATTACK
     attacker_params: AttackerParams = AttackerParams()
     online_params: OnlineParams = OnlineParams(online_type=AlgorithmType.STOCHASTIC_MODIFIED_VIRTUAL, K=1000)
-    logger_params: LoggerParams = LoggerParams(save_dir="/checkpoint/hberard/OnlineAttack/results")
+    logger_params: LoggerParams = LoggerParams(save_dir="/checkpoint/hberard/OnlineAttack/results_robust")
     seed: int = 1234
 
 
