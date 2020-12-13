@@ -1,4 +1,4 @@
-from .base import Algorithm
+from .base import Algorithm, AlgorithmType
 
 
 class OfflineAlgorithm(Algorithm):
@@ -8,6 +8,7 @@ class OfflineAlgorithm(Algorithm):
             k (int)     -- number of attacks
         """
         super().__init__(k)
+        self.name = AlgorithmType.OFFLINE.name
 
     def action(self, value: float, index: int):
         self.S.append([value, index])

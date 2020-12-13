@@ -1,9 +1,9 @@
 from dataclasses import dataclass
-from argparse import Namespace
-from omegaconf import OmegaConf, MISSING
+from omegaconf import MISSING
 from .models import MnistModel
 from online_attacks.classifiers.dataset import DatasetParams
 from online_attacks.attacks import Attacker, AttackerParams
+from typing import Optional
 
 
 @dataclass
@@ -18,3 +18,5 @@ class MnistTrainingParams:
     train_on_test: bool = False
     attacker: Attacker = Attacker.NONE
     attacker_params: AttackerParams = AttackerParams()
+    model_dir: str = "./pretrained_models/"
+    model_attacker: Optional[str] = None

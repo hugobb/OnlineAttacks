@@ -2,7 +2,6 @@ from dataclasses import dataclass
 import torch
 from torch.nn import CrossEntropyLoss
 from omegaconf import OmegaConf
-from typing import Dict, Any
 
 from online_attacks.classifiers.mnist import load_mnist_classifier, load_mnist_dataset, MnistModel
 from online_attacks.attacks import create_attacker, Attacker, AttackerParams
@@ -13,15 +12,15 @@ from online_attacks.utils import seed_everything
 
 
 @dataclass
-class Params(Dict[str, Any]):
+class Params:
     num_runs: int = 5
     model_type: MnistModel = MnistModel.MODEL_A
-    model_name: str = "PGD_ATTACK_train_0"
+    model_name: str = "0"
     model_dir: str = "/checkpoint/hberard/OnlineAttack/pretained_models/"
     attacker_type: Attacker = Attacker.FGSM_ATTACK
     attacker_params: AttackerParams = AttackerParams()
-    online_params: OnlineParams = OnlineParams(online_type=AlgorithmType.STOCHASTIC_MODIFIED_VIRTUAL, K=1000)
-    logger_params: LoggerParams = LoggerParams(save_dir="/checkpoint/hberard/OnlineAttack/results_robust")
+    online_params: OnlineParams = OnlineParams(exhaust=True)
+    logger_params: LoggerParams = LoggerParams(save_dir="/checkpoint/hberard/OnlineAttack/new_results/fgsm_not_robust")
     seed: int = 1234
 
 
@@ -31,6 +30,7 @@ def run(params: Params):
     logger = Logger(params.logger_params)
     device = "cuda" if torch.cuda.is_available() else "cpu"
     dataset = load_mnist_dataset(train=False)
+    permutation_gen = datastream.PermutationGenerator(len(dataset), seed=params.seed)
 
     params.online_params.N = len(dataset)
 
@@ -44,9 +44,9 @@ def run(params: Params):
 
     record = {"hparams": OmegaConf.to_container(params), "runs": []}
     for i in range(params.num_runs):
-        permutation = torch.randperm(len(dataset))
+        permutation = permutation_gen.sample()
         source_stream = datastream.BatchDataStream(dataset, batch_size=1000, transform=transform, permutation=permutation)
-        indices = compute_indices(source_stream, [algorithm], pbar_flag=False)[0]
+        indices = compute_indices(source_stream, algorithm, pbar_flag=False)
         record["runs"].append({"permutation": permutation.tolist(), "indices": indices})
     
     logger.save_record(record)
@@ -54,8 +54,9 @@ def run(params: Params):
 
 
 if __name__ == "__main__":
-    for algorithm in AlgorithmType:
+    for k in [10, 100, 1000]:
         params = OmegaConf.structured(Params())
-        params.online_params.online_type = algorithm
+        params.online_params.K = k
+        params.online_params.online_type = list(AlgorithmType)
         run(params)
 

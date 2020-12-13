@@ -120,7 +120,7 @@ def load_mnist_classifier(model_type: MnistModel, name: str = None, model_dir: s
     if name is not None:
         filename = os.path.join(model_dir, "mnist", model_type.value, "%s.pth"%name)
         if os.path.exists(filename):
-            state_dict = torch.load(filename)
+            state_dict = torch.load(filename, map_location=torch.device('cpu'))
             model.load_state_dict(state_dict)
         else:
             raise OSError("File not found !")

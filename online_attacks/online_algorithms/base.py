@@ -1,4 +1,13 @@
 import random
+from enum import Enum
+
+
+class AlgorithmType(Enum):
+    OFFLINE = "offline_algorithm"
+    STOCHASTIC_VIRTUAL = "stochastic_virtual"
+    STOCHASTIC_OPTIMISTIC = "stochastic_optimistic"
+    STOCHASTIC_MODIFIED_VIRTUAL = "stochastic_modified_virtual"
+    RANDOM = "random"
 
 
 class Algorithm:
@@ -18,6 +27,7 @@ class RandomAlgorithm(Algorithm):
         super().__init__(k)
         self.N = N
         self.random_permutation = random.sample(range(self.N), self.k)
+        self.name = AlgorithmType.RANDOM.name
 
     def action(self, value: float, index: int):
         if index in self.random_permutation:

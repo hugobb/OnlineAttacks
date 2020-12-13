@@ -1,4 +1,4 @@
-from .base import Algorithm
+from .base import Algorithm, AlgorithmType
 import ipdb
 
 
@@ -17,6 +17,7 @@ class StochasticModifiedVirtual(Algorithm):
         self.R = []
         self.sampling_phase = True
         self.exhaust = exhaust
+        self.name = AlgorithmType.STOCHASTIC_MODIFIED_VIRTUAL.name
 
     def reset(self):
         super().reset()

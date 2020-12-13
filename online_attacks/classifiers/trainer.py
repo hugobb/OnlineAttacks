@@ -5,11 +5,13 @@ from torch.optim import Optimizer
 import torch
 from online_attacks.utils.sls import Sls
 from advertorch.context import ctx_noparamgrad_and_eval
+from advertorch.attacks import Attack
+from typing import Optional
 
 
 class Trainer:
     def __init__(self, model: Module, train_loader: DataLoader, test_loader: DataLoader, optimizer: Optimizer,
-                 criterion: Module = nn.CrossEntropyLoss(), attacker=None, device=None, logger=None):
+                 criterion: Module = nn.CrossEntropyLoss(), attacker: Optional[Attack] = None, device=None, logger=None):
         self.model = model
         self.criterion = criterion
         self.train_loader = train_loader
@@ -30,7 +32,7 @@ class Trainer:
         for batch_idx, (data, target) in enumerate(self.train_loader):
             data, target = data.to(self.device), target.to(self.device)
             if self.attacker is not None:
-                with ctx_noparamgrad_and_eval(self.model):
+                with ctx_noparamgrad_and_eval(self.attacker.predict):
                     data = self.attacker.perturb(data, target)
             
             self.optimizer.zero_grad()
@@ -62,6 +64,7 @@ class Trainer:
         
     def test(self, epoch: int) -> float:
         self.model.eval()
+        self.attacker.predict.eval()
         test_loss = 0
         correct = 0
         adv_correct = 0

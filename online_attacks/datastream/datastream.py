@@ -1,7 +1,8 @@
-from torch.utils.data import Dataset, DataLoader, SubsetRandomSampler, BatchSampler
+from torch.utils.data import Dataset, DataLoader, SubsetRandomSampler
 from torch import nn
 from advertorch.attacks import Attack
 import torch
+import numpy as np
 
 
 class BatchDataStream:
@@ -31,6 +32,15 @@ class BatchDataStream:
             if self.transform is not None:
                 x, target = self.transform(x, target)
             yield x, target
+
+
+class PermutationGenerator:
+    def __init__(self, n, seed=1234):
+        self.rng = np.random.default_rng(seed)
+        self.n = n
+    
+    def sample(self):
+        return self.rng.permutation(self.n)
 
 
 class PermuteDataset(Dataset):

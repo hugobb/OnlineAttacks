@@ -9,6 +9,6 @@ def compute_attack_success_rate(datastream: Iterable):
         pred = x.max(1, keepdim=True)[1]
         adv_correct += pred.eq(target.view_as(pred)).sum().item()
         num_samples += len(x)
-    fool_rate = 1 - adv_correct / num_samples
+    fool_rate = num_samples - adv_correct
     
     return fool_rate

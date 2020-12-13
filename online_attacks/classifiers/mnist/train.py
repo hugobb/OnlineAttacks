@@ -16,8 +16,14 @@ def train_mnist(params: MnistTrainingParams = MnistTrainingParams(), device: Opt
     optimizer = optim.Adam(model.parameters(), lr=params.lr)
     if params.train_on_test:
         train_loader, test_loader = test_loader, train_loader
-    attacker = create_attacker(model, params.attacker, params.attacker_params)
-    trainer = Trainer(model, train_loader, test_loader, optimizer, attacker=attacker, device=device)
+
+    #TODO: Implement Ensemble Adversarial Training, where a list of attacker is provided
+    model_attacker = model
+    if params.model_attacker is not None:
+        model_attacker = load_mnist_classifier(params.model_type, name=params.model_attacker, model_dir=params.model_dir, device=device)
+
+    attacker = create_attacker(model_attacker, params.attacker, params.attacker_params)
+    trainer = Trainer(model, train_loader, test_loader, optimizer, attacker=attacker, device=device, eval=True)
     
     filename = None
     if params.save_model:

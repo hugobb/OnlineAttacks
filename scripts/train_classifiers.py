@@ -30,6 +30,8 @@ class TrainClassifier(Launcher):
             params.name += "test_" if params.train_on_test else "train_"
             params.name += str(args.name)
 
+            if args.transfer is not None:
+                params.model_attacker = args.model_attacker
             mnist.train(params, device=device)
         else:
             raise ValueError()
@@ -43,6 +45,7 @@ class TrainClassifier(Launcher):
         parser.add_argument("--num_models", default=1, type=int)
         parser.add_argument("--slurm", type=str, default="")
         parser.add_argument("--robust", action="store_true")
+        parser.add_argument("--model_attacker", default=None, type=str)
         return parser
 
 

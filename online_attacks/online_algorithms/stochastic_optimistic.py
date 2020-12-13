@@ -1,4 +1,5 @@
-from .base import Algorithm
+from .base import Algorithm, AlgorithmType
+
 
 class StochasticOptimistic(Algorithm):
     def __init__(self, N: int, k : int, threshold: int, exhaust: bool):
@@ -15,6 +16,7 @@ class StochasticOptimistic(Algorithm):
         self.R = []
         self.sampling_phase = True
         self.exhaust = exhaust
+        self.name = AlgorithmType.STOCHASTIC_OPTIMISTIC.name
 
     def reset(self):
         super().reset()

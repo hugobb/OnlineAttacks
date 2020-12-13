@@ -19,10 +19,10 @@ def run_experiment(params: OnlineParams, train_loader: Dataset):
     num_perms = len(train_loader)
     comp_ratio_list = []
     for i, dataset in enumerate(train_loader):
-        online_indices, offline_indices = compute_indices(dataset, [online_algorithm, offline_algorithm])
-        comp_ratio_list.append(compute_competitive_ratio(online_indices, offline_indices))
+        indices = compute_indices(dataset, [online_algorithm, offline_algorithm])
+        comp_ratio_list.append(compute_competitive_ratio(indices[online_algorithm.name], indices[offline_algorithm.name]))
     comp_ratio = np.sum(comp_ratio_list) / (params.K*num_perms)
-    print("Competitive Ratio for %s with K = %d is %f " %(params.online_type, params.K, comp_ratio))
+    print("Competitive Ratio for %s with K = %d is %f " %(online_algorithm.name, params.K, comp_ratio))
     return comp_ratio
 
 

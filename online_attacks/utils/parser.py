@@ -22,7 +22,9 @@ class ArgumentParser(NestedArgumentParser):
             name = parent + "."
         for key in config:
             if not OmegaConf.is_missing(config, key):
-                if OmegaConf.is_config(config[key]):
+                if OmegaConf.is_list(config[key]):
+                    self.add_argument("--" + name + key, default=config[key], nargs='+', type=type(config[key][0]))
+                elif OmegaConf.is_config(config[key]):
                     self.add_argument_from_config(config[key], name + key)
                 else:
                     self.add_argument("--" + name + key, default=config[key], type=type(config[key]))

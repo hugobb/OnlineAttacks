@@ -3,64 +3,62 @@ from .offline_algorithm import OfflineAlgorithm
 from .stochastic_virtual import StochasticVirtual
 from .stochastic_optimistic import StochasticOptimistic
 from .stochastic_modified_virtual import StochasticModifiedVirtual
-from .base import Algorithm, RandomAlgorithm
-from enum import Enum
-from dataclasses import dataclass
+from .base import Algorithm, RandomAlgorithm, AlgorithmType
+
+from dataclasses import dataclass, field
 from typing import Iterable, List, Union
 import tqdm
 
 
-class AlgorithmType(Enum):
-    OFFLINE = "offline_algorithm"
-    STOCHASTIC_VIRTUAL = "stochastic_virtual"
-    STOCHASTIC_OPTIMISTIC = "stochastic_optimistic"
-    STOCHASTIC_MODIFIED_VIRTUAL = "stochastic_modified_virtual"
-    RANDOM = "random"
-
-
 @dataclass
 class OnlineParams:
-    online_type: AlgorithmType = AlgorithmType.STOCHASTIC_VIRTUAL
+    online_type: List[AlgorithmType] = field(default_factory=lambda: [AlgorithmType.STOCHASTIC_VIRTUAL])
     N: int = 5
     K: int = 1
     threshold: int = 0 # This will be reset in create_online_algorithm
     exhaust: bool = False # Exhaust K
 
 
-def create_algorithm(online_type: AlgorithmType, params: OnlineParams = OnlineParams()):
-    if params.threshold == 0:
-        threshold = np.floor(params.N / np.e)
-    else:
-        threshold = params.threshold
+def create_algorithm(online_type: Union[AlgorithmType, List[AlgorithmType]], params: OnlineParams = OnlineParams()):
+    if isinstance(online_type, AlgorithmType):
+        online_type = (online_type, )
 
-    if online_type == AlgorithmType.STOCHASTIC_VIRTUAL:
-        algorithm = StochasticVirtual(params.N, params.K, threshold,
-                params.exhaust)
-    elif online_type == AlgorithmType.STOCHASTIC_OPTIMISTIC:
-        algorithm = StochasticOptimistic(params.N, params.K, threshold,
-                params.exhaust)
-    elif online_type == AlgorithmType.STOCHASTIC_MODIFIED_VIRTUAL:
-        algorithm = StochasticModifiedVirtual(params.N, params.K, threshold,
-                params.exhaust)
-    elif online_type == AlgorithmType.OFFLINE:
-        algorithm = OfflineAlgorithm(params.K)
-    elif online_type == AlgorithmType.RANDOM:
-        algorithm = RandomAlgorithm(params.N, params.K)
-    else:
-        raise ValueError(f"Unknown online algo type: '{online_type}'.")
+    list_algorithms = []
+    for alg_type in online_type:
+        if params.threshold == 0:
+            threshold = np.floor(params.N / np.e)
+        else:
+            threshold = params.threshold
+
+        if alg_type == AlgorithmType.STOCHASTIC_VIRTUAL:
+            algorithm = StochasticVirtual(params.N, params.K, threshold,
+                    params.exhaust)
+        elif alg_type == AlgorithmType.STOCHASTIC_OPTIMISTIC:
+            algorithm = StochasticOptimistic(params.N, params.K, threshold,
+                    params.exhaust)
+        elif alg_type == AlgorithmType.STOCHASTIC_MODIFIED_VIRTUAL:
+            algorithm = StochasticModifiedVirtual(params.N, params.K, threshold,
+                    params.exhaust)
+        elif alg_type == AlgorithmType.OFFLINE:
+            algorithm = OfflineAlgorithm(params.K)
+        elif alg_type == AlgorithmType.RANDOM:
+            algorithm = RandomAlgorithm(params.N, params.K)
+        else:
+            raise ValueError(f"Unknown online algo type: '{alg_type}'.")
+
+        list_algorithms.append(algorithm)
     
-    return algorithm
+    return list_algorithms
 
 
 def create_online_algorithm(params: OnlineParams = OnlineParams()) -> (Algorithm, Algorithm):
-    offline_algorithm = create_algorithm(AlgorithmType.OFFLINE, params)
-    online_algorithm = create_algorithm(params.online_type, params)
-    return offline_algorithm, online_algorithm
+    return create_algorithm([AlgorithmType.OFFLINE] + list(params.online_type), params)
 
 
 def compute_indices(data_stream: Iterable, algorithm_list: Union[Algorithm, List[Algorithm]], pbar_flag=False) -> Union[Iterable, List[Iterable]]:
     if isinstance(algorithm_list, Algorithm):
         algorithm_list = (algorithm_list, ) 
+    
     for algorithm in algorithm_list:
         algorithm.reset()
 
@@ -83,7 +81,7 @@ def compute_indices(data_stream: Iterable, algorithm_list: Union[Algorithm, List
     if pbar_flag:
         pbar.close()
 
-    indices_list = tuple(algorithm.S for algorithm in algorithm_list)
+    indices_list = dict((algorithm.name, algorithm.S) for algorithm in algorithm_list)
     return indices_list
 
 
