@@ -48,7 +48,7 @@ def create_algorithm(online_type: AlgorithmType, params: OnlineParams = OnlinePa
         algorithm = RandomAlgorithm(params.N, params.K)
     else:
         raise ValueError(f"Unknown online algo type: '{online_type}'.")
-    
+
     return algorithm
 
 
@@ -60,7 +60,7 @@ def create_online_algorithm(params: OnlineParams = OnlineParams()) -> (Algorithm
 
 def compute_indices(data_stream: Iterable, algorithm_list: Union[Algorithm, List[Algorithm]], pbar_flag=False) -> Union[Iterable, List[Iterable]]:
     if isinstance(algorithm_list, Algorithm):
-        algorithm_list = (algorithm_list, ) 
+        algorithm_list = (algorithm_list, )
     for algorithm in algorithm_list:
         algorithm.reset()
 
@@ -93,3 +93,9 @@ def compute_competitive_ratio(online_indices: Iterable, offline_indices: Iterabl
     comp_ratio = len(list(online_indices & offline_indices))
     return comp_ratio
 
+def compute_knapsack_online_value(online_indices: Iterable) -> int:
+    if len(online_indices) > 0:
+        online_value = sum([x[0] for x in online_indices])
+    else:
+        online_value = 0.0
+    return online_value
