@@ -91,3 +91,10 @@ def compute_competitive_ratio(online_indices: Iterable, offline_indices: Iterabl
     comp_ratio = len(list(online_indices & offline_indices))
     return comp_ratio
 
+
+def compute_knapsack_online_value(online_indices: Iterable) -> float:
+    if len(online_indices) > 0:
+        online_value = sum([x[0] for x in online_indices])
+    else:
+        online_value = 0.0
+    return online_value
