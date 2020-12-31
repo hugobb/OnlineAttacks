@@ -3,6 +3,7 @@ from .offline_algorithm import OfflineAlgorithm
 from .stochastic_virtual import StochasticVirtual
 from .stochastic_optimistic import StochasticOptimistic
 from .stochastic_modified_virtual import StochasticModifiedVirtual
+from .stochastic_single_ref import StochasticSingleRef
 from .base import Algorithm, RandomAlgorithm, AlgorithmType
 
 from dataclasses import dataclass, field
@@ -15,6 +16,7 @@ class OnlineParams:
     online_type: List[AlgorithmType] = field(default_factory=lambda: [AlgorithmType.STOCHASTIC_VIRTUAL])
     N: int = 5
     K: int = 1
+    reference_rank: int = 1 # This in only used by Single-Ref
     threshold: int = 0 # This will be reset in create_online_algorithm
     exhaust: bool = False # Exhaust K
 
@@ -39,6 +41,10 @@ def create_algorithm(online_type: Union[AlgorithmType, List[AlgorithmType]], par
         elif alg_type == AlgorithmType.STOCHASTIC_MODIFIED_VIRTUAL:
             algorithm = StochasticModifiedVirtual(params.N, params.K, threshold,
                     params.exhaust)
+        elif alg_type == AlgorithmType.STOCHASTIC_SINGLE_REF:
+            algorithm = StochasticSingleRef(params.N, params.K,
+                                            params.reference_rank, threshold,
+                                            params.exhaust)
         elif alg_type == AlgorithmType.OFFLINE:
             algorithm = OfflineAlgorithm(params.K)
         elif alg_type == AlgorithmType.RANDOM:
@@ -47,7 +53,7 @@ def create_algorithm(online_type: Union[AlgorithmType, List[AlgorithmType]], par
             raise ValueError(f"Unknown online algo type: '{alg_type}'.")
 
         list_algorithms.append(algorithm)
-    
+
     return list_algorithms
 
 
@@ -57,8 +63,8 @@ def create_online_algorithm(params: OnlineParams = OnlineParams()) -> (Algorithm
 
 def compute_indices(data_stream: Iterable, algorithm_list: Union[Algorithm, List[Algorithm]], pbar_flag=False) -> Union[Iterable, List[Iterable]]:
     if isinstance(algorithm_list, Algorithm):
-        algorithm_list = (algorithm_list, ) 
-    
+        algorithm_list = (algorithm_list, )
+
     for algorithm in algorithm_list:
         algorithm.reset()
 
