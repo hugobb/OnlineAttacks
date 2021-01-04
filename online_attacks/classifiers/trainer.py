@@ -3,7 +3,8 @@ from torch import nn
 from torch.utils.data import DataLoader
 from torch.optim import Optimizer
 import torch
-from online_attacks.utils.sls import Sls
+from online_attacks.utils.optimizer import Sls
+from online_attacks.attacks import Attacker, NoAttacker
 from advertorch.context import ctx_noparamgrad_and_eval
 from advertorch.attacks import Attack
 from typing import Optional
@@ -31,8 +32,8 @@ class Trainer:
         total = 0 
         for batch_idx, (data, target) in enumerate(self.train_loader):
             data, target = data.to(self.device), target.to(self.device)
-            if self.attacker is not None:
-                with ctx_noparamgrad_and_eval(self.attacker.predict):
+            if not isinstance(self.attacker, NoAttacker):
+                with ctx_noparamgrad_and_eval(self.attacker):
                     data = self.attacker.perturb(data, target)
             
             self.optimizer.zero_grad()
@@ -64,7 +65,8 @@ class Trainer:
         
     def test(self, epoch: int) -> float:
         self.model.eval()
-        self.attacker.predict.eval()
+        if not isinstance(self.attacker, NoAttacker):
+            self.attacker.predict.eval()
         test_loss = 0
         correct = 0
         adv_correct = 0
@@ -79,7 +81,7 @@ class Trainer:
                 pred = output.max(1, keepdim=True)[1]
                 correct += pred.eq(target.view_as(pred)).sum().item()
 
-            if self.attacker is not None:
+            if not isinstance(self.attacker, NoAttacker):
                 data = self.attacker.perturb(data, target)
                 with torch.no_grad():
                     output = self.model(data)

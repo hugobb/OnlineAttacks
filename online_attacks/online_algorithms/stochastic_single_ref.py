@@ -18,7 +18,7 @@ class StochasticSingleRef(Algorithm):
         self.R = []
         self.sampling_phase = True
         self.exhaust = exhaust
-        self.name = AlgorithmType.STOCHASTIC_OPTIMISTIC.name
+        self.name = AlgorithmType.STOCHASTIC_SINGLE_REF.name
 
     def reset(self):
         super().reset()

@@ -1,19 +1,19 @@
 from dataclasses import dataclass
 from omegaconf import MISSING
-from .models import MnistModel
+from .models import CifarModel
 from online_attacks.classifiers.dataset import DatasetParams
 from online_attacks.attacks import Attacker, AttackerParams
-from online_attacks.utils.optimizer import OptimizerParams
+from online_attacks.utils.optimizer import OptimizerParams, OptimizerType
 from typing import Optional
 
 
 @dataclass
-class MnistTrainingParams:
-    name: str = "mnist"
-    model_type: MnistModel = MISSING
+class CifarTrainingParams:
+    name: str = "cifar"
+    model_type: CifarModel = MISSING
     num_epochs: int = 100
+    optimizer_params: OptimizerParams = OptimizerParams(optimizer_type=OptimizerType.SLS)
     dataset_params: DatasetParams = DatasetParams()
-    optimizer_params: OptimizerParams = OptimizerParams(lr=1e-3)
     save_model: bool = True
     save_dir: str = "./pretained_models"
     train_on_test: bool = False

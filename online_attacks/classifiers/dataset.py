@@ -5,6 +5,7 @@ from omegaconf import MISSING
 
 class DatasetType(Enum):
     MNIST = "mnist"
+    CIFAR = "cifar"
 
 
 @dataclass

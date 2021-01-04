@@ -1,4 +1,4 @@
-from .attacks_registry import create_attacker, Attacker, AttackerParams
+from .attacks_registry import create_attacker, Attacker, AttackerParams, NoAttacker
 from typing import Iterable
 from torch.nn import CrossEntropyLoss, Module
 

@@ -11,6 +11,9 @@ class MnistModel(Enum):
     MODEL_C = "modelC"
     MODEL_D = "modelD"
 
+    def __str__(self):
+        return self.value
+
 
 class modelA(nn.Module):
     def __init__(self):
