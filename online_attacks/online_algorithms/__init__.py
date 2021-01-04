@@ -85,10 +85,15 @@ def compute_indices(data_stream: Iterable, algorithm_list: Union[Algorithm, List
     return indices_list
 
 
-def compute_competitive_ratio(online_indices: Iterable, offline_indices: Iterable) -> int:
-    online_indices = set([x[1] for x in online_indices])
-    offline_indices = set([x[1] for x in offline_indices])
-    comp_ratio = len(list(online_indices & offline_indices))
+def compute_competitive_ratio(online_indices: Iterable, offline_indices: Iterable, knapsack=False) -> int:
+    if knapsack:
+        online_value = compute_knapsack_online_value(online_indices)
+        offline_value = compute_knapsack_online_value(offline_indices)
+        comp_ratio = online_value/offline_value
+    else:
+        online_indices = set([x[1] for x in online_indices])
+        offline_indices = set([x[1] for x in offline_indices])
+        comp_ratio = len(list(online_indices & offline_indices))
     return comp_ratio
 
 

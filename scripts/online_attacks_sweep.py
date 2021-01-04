@@ -19,8 +19,8 @@ class Params:
     model_dir: str = "/checkpoint/hberard/OnlineAttack/pretained_models/"
     attacker_type: Attacker = Attacker.FGSM_ATTACK
     attacker_params: AttackerParams = AttackerParams()
-    online_params: OnlineParams = OnlineParams(exhaust=True)
-    logger_params: LoggerParams = LoggerParams(save_dir="/checkpoint/hberard/OnlineAttack/new_results/fgsm_not_robust")
+    online_params: OnlineParams = OnlineParams(exhaust=False)
+    logger_params: LoggerParams = LoggerParams(save_dir="/checkpoint/hberard/OnlineAttack/new_results/fgsm_not_robust_no_exhaust")
     seed: int = 1234
 
 
