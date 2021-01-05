@@ -4,8 +4,8 @@ import numpy as np
 
 class StochasticSingleRef(Algorithm):
     C_DEFAULT = {"default": 0.3678, 1: 0.3678, 10: 0.2159, 100:  0.1331}
-    R_DEFAULT = {"default": 0, 1: 0, 2: 0, 3: 1, 4: 1, 5: 1, 6: 1, 7: 2, 8: 2,
-                 9: 2, 10: 2, 100: 14, 1000: 150}
+    R_DEFAULT = {"default": 1, 1: 1, 2: 1, 3: 2, 4: 2, 5: 2, 6: 2, 7: 3, 8: 3,
+                 9: 3, 10: 3, 100: 15, 1000: 150}
 
     @classmethod
     def get_default_c(cls, k: int) -> float:
@@ -59,7 +59,7 @@ class StochasticSingleRef(Algorithm):
             num_left_to_pick = self.k - num_picked
             num_samples_left = self.N - index
             if num_left_to_pick > 0:
-                r_value, r_index = self.R[self.r]
+                r_value, r_index = self.R[self.r - 1] # 0-based indexing. 
                 if num_samples_left <= num_left_to_pick and self.exhaust:
                     # Just Pick the last samples to exhaust K
                     self.S.append([value, index])
