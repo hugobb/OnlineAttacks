@@ -37,13 +37,10 @@ class StochasticModifiedVirtual(Algorithm):
             num_picked = len(self.S)
             num_left_to_pick = self.k - num_picked
             num_samples_left = self.N - index
-            if num_left_to_pick == 0 or value < k_value:
-                # Don't pick or Update R
-                pass
-            elif num_samples_left <= num_left_to_pick and self.exhaust:
+            if num_samples_left <= num_left_to_pick and self.exhaust and num_left_to_pick > 0:
                 # Just Pick the last samples to exhaust K
                 self.S.append([value, index])
-            elif value > k_value:
+            elif value > k_value and num_left_to_pick > 0:
                 # Update and pick
                 self.S.append([value, index])
                 self.R.append([value, index])
