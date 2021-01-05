@@ -83,6 +83,15 @@ def main():
     args.online_params.exhaust = args.exhaust
     for k in range(1, args.K+1):
         args.online_params.K = k
+        # We use 0 indexing here
+        if k < 3:
+            args.online_params.reference_rank = 0
+        elif k > 2 and k < 6:
+            args.online_params.reference_rank = 1
+        elif k >6 and k < 11:
+            args.online_params.reference_rank = 2
+        else:
+            break
         comp_ratio = run_experiment(args.online_params, train_loader, args.knapsack)
         if args.wandb:
             model_name = "Competitive Ratio " + args.online_params.online_type.value

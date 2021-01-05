@@ -37,7 +37,7 @@ class StochasticSingleRef(Algorithm):
             num_picked = len(self.S)
             num_left_to_pick = self.k - num_picked
             num_samples_left = self.N - index
-            if len(self.R) > 0:
+            if num_left_to_pick > 0:
                 r_value, r_index = self.R[self.r]
                 if num_samples_left <= num_left_to_pick and self.exhaust:
                     # Just Pick the last samples to exhaust K
