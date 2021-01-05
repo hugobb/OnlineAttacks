@@ -4,8 +4,9 @@ import numpy as np
 
 class StochasticSingleRef(Algorithm):
     C_DEFAULT = {"default": 0.3678, 1: 0.3678, 10: 0.2159, 100:  0.1331}
-    R_DEFAULT = {"default": 1, 1: 1, 10: 3, 100: 15, 1000: 150}
-    
+    R_DEFAULT = {"default": 0, 1: 0, 2: 0, 3: 1, 4: 1, 5: 1, 6: 1, 7: 2, 8: 2,
+                 9: 2, 10: 2, 100: 14, 1000: 150}
+
     @classmethod
     def get_default_c(cls, k: int) -> float:
         if k in cls.C_DEFAULT:
