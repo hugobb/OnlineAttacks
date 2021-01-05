@@ -58,7 +58,6 @@ def main():
     parser.add_argument('--namestr', type=str, default='Online-Attacks', \
             help='additional info in output filename to describe experiments')
 
-
     args = parser.parse_args()
     args.dev = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     seed_everything(args.seed)
@@ -75,6 +74,7 @@ def main():
     train_loader = ToyDatastream(args.online_params.N, args.max_perms)
     for k in range(1, args.K+1):
         args.online_params.K = k
+        args.online_params.exhaust = args.exhaust
         comp_ratio = run_experiment(args.online_params, train_loader, args.knapsack)
         if args.wandb:
             model_name = "Competitive Ratio " + args.online_params.online_type.value

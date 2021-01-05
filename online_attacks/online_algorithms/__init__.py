@@ -7,7 +7,7 @@ from .stochastic_single_ref import StochasticSingleRef
 from .base import Algorithm, RandomAlgorithm, AlgorithmType
 
 from dataclasses import dataclass, field
-from typing import Iterable, List, Union
+from typing import Iterable, List, Union, Optional
 import tqdm
 import ipdb
 
@@ -16,8 +16,8 @@ class OnlineParams:
     online_type: List[AlgorithmType] = field(default_factory=lambda: [AlgorithmType.STOCHASTIC_VIRTUAL])
     N: int = 5
     K: int = 1
-    reference_rank: int = 1 # This in only used by Single-Ref
-    threshold: int = 0 # This will be reset in create_online_algorithm
+    reference_rank: Optional[int] = None # This in only used by Single-Ref
+    threshold: Optional[int] = None # This will be reset in create_online_algorithm
     exhaust: bool = False # Exhaust K
 
 
@@ -27,23 +27,18 @@ def create_algorithm(online_type: Union[AlgorithmType, List[AlgorithmType]], par
 
     list_algorithms = []
     for alg_type in online_type:
-        if params.threshold == 0:
-            threshold = np.floor(params.N / np.e)
-        else:
-            threshold = params.threshold
-
         if alg_type == AlgorithmType.STOCHASTIC_VIRTUAL:
-            algorithm = StochasticVirtual(params.N, params.K, threshold,
+            algorithm = StochasticVirtual(params.N, params.K, params.threshold,
                     params.exhaust)
         elif alg_type == AlgorithmType.STOCHASTIC_OPTIMISTIC:
-            algorithm = StochasticOptimistic(params.N, params.K, threshold,
+            algorithm = StochasticOptimistic(params.N, params.K, params.threshold,
                     params.exhaust)
         elif alg_type == AlgorithmType.STOCHASTIC_MODIFIED_VIRTUAL:
-            algorithm = StochasticModifiedVirtual(params.N, params.K, threshold,
+            algorithm = StochasticModifiedVirtual(params.N, params.K, params.threshold,
                     params.exhaust)
         elif alg_type == AlgorithmType.STOCHASTIC_SINGLE_REF:
             algorithm = StochasticSingleRef(params.N, params.K,
-                                            params.reference_rank, threshold,
+                                            params.reference_rank, params.threshold,
                                             params.exhaust)
         elif alg_type == AlgorithmType.OFFLINE:
             algorithm = OfflineAlgorithm(params.K)
@@ -87,7 +82,7 @@ def compute_indices(data_stream: Iterable, algorithm_list: Union[Algorithm, List
     if pbar_flag:
         pbar.close()
 
-    indices_list = dict((algorithm.name, algorithm.S) for algorithm in algorithm_list)
+    indices_list = dict((algorithm.name, algorithm.get_indices()) for algorithm in algorithm_list)
     return indices_list
 
 

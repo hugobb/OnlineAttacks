@@ -1,8 +1,10 @@
 from .base import Algorithm, AlgorithmType
+from typing import Optional
+import numpy as np
 
 
 class StochasticOptimistic(Algorithm):
-    def __init__(self, N: int, k : int, threshold: int, exhaust: bool):
+    def __init__(self, N: int, k : int, threshold: Optional[int] = None, exhaust: bool = False):
         """ Construct Stochastic Optimistic
         Parameters:
             N (int)           -- number of data points
@@ -12,7 +14,11 @@ class StochasticOptimistic(Algorithm):
         """
         super().__init__(k)
         self.N = N
+
+        if threshold is None:
+            threshold = np.floor(N / np.e)
         self.threshold = threshold
+        
         self.R = []
         self.sampling_phase = True
         self.exhaust = exhaust

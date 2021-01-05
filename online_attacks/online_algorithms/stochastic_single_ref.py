@@ -1,7 +1,23 @@
 from .base import Algorithm, AlgorithmType
+import numpy as np
 
 
 class StochasticSingleRef(Algorithm):
+    C_DEFAULT = {"default": 0.3678, 1: 0.3678, 10: 0.2159, 100:  0.1331}
+    R_DEFAULT = {"default": 1, 1: 1, 10: 3, 100: 15, 1000: 150}
+    
+    @classmethod
+    def get_default_c(cls, k: int) -> float:
+        if k in cls.C_DEFAULT:
+            return cls.C_DEFAULT[k]
+        return cls.C_DEFAULT["default"]
+
+    @classmethod
+    def get_default_r(cls, k: int) -> int:
+        if k in cls.R_DEFAULT:
+            return cls.R_DEFAULT[k]
+        return cls.R_DEFAULT["default"]
+
     def __init__(self, N: int, k : int, r: int, threshold: int, exhaust: bool):
         """ Construct Stochastic Optimistic
         Parameters:
@@ -13,7 +29,11 @@ class StochasticSingleRef(Algorithm):
         """
         super().__init__(k)
         self.N = N
-        self.r = r
+        self.r = self.get_default_r(k)
+
+        if threshold is None:
+            threshold = np.floor(self.get_default_c(k)*N + 1)
+
         self.threshold = threshold
         self.R = []
         self.sampling_phase = True
