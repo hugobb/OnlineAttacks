@@ -21,6 +21,11 @@ def run_experiment(params: OnlineParams, train_loader: Dataset, knapsack:bool):
         offline_dataset, online_dataset = dataset[0], dataset[1]
         indices = compute_indices(online_dataset, [online_algorithm, offline_algorithm])
         comp_ratio_list.append(compute_competitive_ratio(indices[online_algorithm.name], indices[offline_algorithm.name]))
+        if i % 10 == 0:
+            print("K is %d while num in S is %d" %(params.K, len(online_algorithm.S)))
+        if len(online_algorithm.S) < online_algorithm.k:
+            ipdb.set_trace()
+
         if knapsack:
             offline_value = sum([x[0] for x in indices[offline_algorithm.name]])
             online_knapsack_list.append(compute_knapsack_online_value(indices[online_algorithm.name]))
@@ -75,6 +80,7 @@ def main():
         wandb.init(project='Online-Attacks',
                    name='Online-Attack-{}-{}'.format("toy", args.namestr))
     train_loader = ToyDatastream_Stochastic(args.online_params.N, args.max_perms, args.eps)
+    args.online_params.exhaust = args.exhaust
     for k in range(1, args.K+1):
         args.online_params.K = k
         comp_ratio = run_experiment(args.online_params, train_loader, args.knapsack)
