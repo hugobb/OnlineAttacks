@@ -18,7 +18,7 @@ class StochasticOptimistic(Algorithm):
         if threshold is None:
             threshold = np.floor(N / np.e)
         self.threshold = threshold
-        
+
         self.R = []
         self.sampling_phase = True
         self.exhaust = exhaust
@@ -42,11 +42,12 @@ class StochasticOptimistic(Algorithm):
             num_left_to_pick = self.k - num_picked
             num_samples_left = self.N - index
             if len(self.R) > 0:
-                k_value, k_index = self.R[-1]
+                self.k_value, self.k_index = self.R[-1]
+            if num_left_to_pick > 0:
                 if num_samples_left <= num_left_to_pick and self.exhaust:
                     # Just Pick the last samples to exhaust K
                     self.S.append([value, index])
-                elif value > k_value:
+                elif value > self.k_value:
                     # Update and pick
                     self.S.append([value, index])
                     self.R = self.R[:-2]

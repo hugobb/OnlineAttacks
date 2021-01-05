@@ -23,8 +23,6 @@ def run_experiment(params: OnlineParams, train_loader: Dataset, knapsack:bool):
         comp_ratio_list.append(compute_competitive_ratio(indices[online_algorithm.name], indices[offline_algorithm.name]))
         if i % 10 == 0:
             print("K is %d while num in S is %d" %(params.K, len(online_algorithm.S)))
-        if len(online_algorithm.S) < online_algorithm.k:
-            ipdb.set_trace()
 
         if knapsack:
             offline_value = sum([x[0] for x in indices[offline_algorithm.name]])

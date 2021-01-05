@@ -24,7 +24,6 @@ class Algorithm:
 
     def get_indices(self):
         assert len(self.S) <= self.k
-        print(len(self.S))
         return self.S
 
 
