@@ -5,7 +5,7 @@ import os
 
 from .vgg import VGG
 from .resnet import ResNet18
-from .densenet import DenseNet
+from .densenet import densenet_cifar
 from .googlenet import GoogLeNet
 from .wide_resnet import Wide_ResNet
 
@@ -21,7 +21,7 @@ class CifarModel(Enum):
         return self.value
 
 
-__cifar_model_dict__ = {CifarModel.VGG_16: VGG, CifarModel.RESNET_18: ResNet18, CifarModel.DENSE_121: DenseNet,
+__cifar_model_dict__ = {CifarModel.VGG_16: VGG, CifarModel.RESNET_18: ResNet18, CifarModel.DENSE_121: densenet_cifar,
                         CifarModel.GOOGLENET: GoogLeNet, CifarModel.WIDE_RESNET: Wide_ResNet}
 
 
