@@ -10,6 +10,7 @@ class MnistModel(Enum):
     MODEL_B = "modelB"
     MODEL_C = "modelC"
     MODEL_D = "modelD"
+    MADRY_MODEL = "madry"
 
     def __str__(self):
         return self.value
@@ -111,7 +112,8 @@ class modelD(nn.Module):
         return x
 
 
-__mnist_model_dict__ = {MnistModel.MODEL_A: modelA, MnistModel.MODEL_B: modelB, MnistModel.MODEL_C: modelC, MnistModel.MODEL_D: modelD}
+__mnist_model_dict__ = {MnistModel.MODEL_A: modelA, MnistModel.MODEL_B: modelB,
+                        MnistModel.MODEL_C: modelC, MnistModel.MODEL_D: modelD}
 
 
 def make_mnist_model(model: MnistModel) -> nn.Module:
@@ -119,14 +121,26 @@ def make_mnist_model(model: MnistModel) -> nn.Module:
 
 
 def load_mnist_classifier(model_type: MnistModel, name: str = None, model_dir: str = None, device=None, eval=False) -> nn.Module:
-    model = make_mnist_model(model_type)
-    if name is not None:
-        filename = os.path.join(model_dir, "mnist", model_type.value, "%s.pth"%name)
+    if model_type == MnistModel.MADRY_MODEL:
+        from online_attacks.classifiers.madry import load_madry_model
+        filename = os.path.join(model_dir, "mnist", model_type.value, "%s"%name)
         if os.path.exists(filename):
-            state_dict = torch.load(filename, map_location=torch.device('cpu'))
-            model.load_state_dict(state_dict)
+            model = load_madry_model("mnist", filename)
         else:
-            raise OSError("File not found !")
+            raise OSError("File %s not found !"%filename)
+
+    elif model_type in __mnist_model_dict__:
+        model = make_mnist_model(model_type)
+        if name is not None:
+            filename = os.path.join(model_dir, "mnist", model_type.value, "%s.pth"%name)
+            if os.path.exists(filename):
+                state_dict = torch.load(filename, map_location=torch.device('cpu'))
+                model.load_state_dict(state_dict)
+            else:
+                raise OSError("File %s not found !"%filename)
+
+    else:
+        raise ValueError()
     
     if eval:
         model.eval()
