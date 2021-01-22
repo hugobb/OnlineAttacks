@@ -3,11 +3,11 @@ import numpy as np
 import math
 
 
-def create_r_default(self, x):
+def create_r_default(x):
     # Take a list of (start, end, value) and return a dict with all keys between start and end having the value `value`.
     data = {}
     for start, end, value in x:
-        data.update({value for i in range(start, end + 1)})
+        data.update({i: value for i in range(start, end + 1)})
     return data
     
 
@@ -18,7 +18,7 @@ class StochasticSingleRef(Algorithm):
     
     # Take a list of (start, end, value)
     R_DEFAULT = create_r_default([(1, 2, 1), (3, 6, 2), (7, 10, 3), (11, 16, 4), (17, 22, 5), (23, 28, 6), (29, 35, 7), (36, 42, 8),
-                                 (43, 50, 9), (51, 58, 10), (59, 67, 11), (68, 76, 12), (77, 85, 13), (86, 95, 14), (96, 100, 15), ()])  
+                                 (43, 50, 9), (51, 58, 10), (59, 67, 11), (68, 76, 12), (77, 85, 13), (86, 95, 14), (96, 100, 15)])  
 
     @classmethod
     def get_default_c(cls, k: int) -> float:
