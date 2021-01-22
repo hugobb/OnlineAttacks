@@ -6,7 +6,7 @@ from .params import AttackerParams
 
 @dataclass
 class PGDParams(AttackerParams):
-    nb_iter: int = 10
+    nb_iter: int = 40
     eps_iter: float = 0.01
     rand_init: bool = True
     norm: str = "Linf"

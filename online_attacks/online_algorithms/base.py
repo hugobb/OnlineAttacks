@@ -40,3 +40,5 @@ class RandomAlgorithm(Algorithm):
 
     def reset(self):
         self.S = []
+        self.random_permutation = random.sample(range(self.N), self.k)
+

@@ -33,16 +33,16 @@ def make_cifar_model(model: CifarModel) -> nn.Module:
 def load_cifar_classifier(model_type: CifarModel, name: str = None, model_dir: str = None, device=None, eval=False) -> nn.Module:
     if model_type == CifarModel.MADRY_MODEL:
         from online_attacks.classifiers.madry import load_madry_model
-        filename = os.path.join(model_dir, "mnist", model_type.value, "%s"%name)
+        filename = os.path.join(model_dir, "cifar", model_type.value, "%s"%name)
         if os.path.exists(filename):
-            model = load_madry_model("mnist", filename)
+            model = load_madry_model("cifar", filename)
         else:
             raise OSError("File %s not found !"%filename)
 
     elif model_type in __cifar_model_dict__:
         model = make_cifar_model(model_type)
         if name is not None:
-            filename = os.path.join(model_dir, "mnist", model_type.value, "%s.pth"%name)
+            filename = os.path.join(model_dir, "cifar", model_type.value, "%s.pth"%name)
             if os.path.exists(filename):
                 state_dict = torch.load(filename, map_location=torch.device('cpu'))
                 model.load_state_dict(state_dict)

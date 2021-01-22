@@ -42,6 +42,7 @@ class TrainClassifier(Launcher):
             params.model_type = args.model_type
             if params.model_type in [CifarModel.GOOGLENET, CifarModel.WIDE_RESNET]:
                 params.dataset_params.batch_size = 64
+                params.dataset_params.test_batch_size = 256
             elif params.model_type == CifarModel.DENSE_121:
                 params.dataset_params.batch_size = 128
 
@@ -68,9 +69,9 @@ class TrainClassifier(Launcher):
         # Hack to be able to parse either MnistModel or CifarModel 
         args, _ = parser.parse_known_args()
         if args.dataset == DatasetType.MNIST:
-            parser.add_argument("--model_type", nargs='+', type=MnistModel, choices=MnistModel)
+            parser.add_argument("--model_type", nargs='+', default=MnistModel.MODEL_A, type=MnistModel, choices=MnistModel)
         elif args.dataset == DatasetType.CIFAR:
-            parser.add_argument("--model_type", nargs='+', type=CifarModel, choices=CifarModel)
+            parser.add_argument("--model_type", nargs='+', default=CifarModel.VGG_16, type=CifarModel, choices=CifarModel)
 
         parser.add_argument("--train_on_test", action="store_true")
         parser.add_argument("--num_models", default=1, type=int)
@@ -91,4 +92,4 @@ if __name__ == "__main__":
             config = copy.deepcopy(args)
             config.model_type = model_type
             config.name = str(i)
-            launcher.launch(config)
+            launcher.launch(config, slurm=config.slurm)
