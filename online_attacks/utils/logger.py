@@ -4,6 +4,7 @@ import os
 from omegaconf import OmegaConf
 from typing import Optional
 import glob
+import shutil
 
 
 def config_exists(config):
@@ -28,7 +29,6 @@ class Logger:
         if self.exp_id is None:
             self.exp_id = str(uuid.uuid4())
         self.path = os.path.join(save_dir, self.exp_id)
-        os.makedirs(os.path.join(self.path, "runs"), exist_ok=True)
 
     def save_hparams(self, hparams):
         os.makedirs(self.path, exist_ok=True)
@@ -36,9 +36,13 @@ class Logger:
         OmegaConf.save(config=hparams, f=filename)
 
     def save_record(self, record):
-        filename = os.path.join(self.path, "runs/%s.json"%(str(uuid.uuid4())))
+        record_id = str(uuid.uuid4())
+        os.makedirs(os.path.join(self.path, "runs"), exist_ok=True)
+        filename = os.path.join(self.path, "runs/%s.json"%(record_id))
         with open(filename, "w+") as f:
             json.dump(record, f, indent=4)
+            f.flush()
+        return record_id
 
     def save_eval_results(self, eval_results, model_name, record_name):
         path = os.path.join(self.path, "eval", model_name)
@@ -46,6 +50,15 @@ class Logger:
         filename = os.path.join(path, "%s.json"%record_name)
         with open(filename, "w+") as f:
             json.dump(eval_results, f, indent=4)
+            f.flush()
+
+    def save_hist(self, eval_results, model_name, record_name):
+        path = os.path.join(self.path, "hist", model_name)
+        os.makedirs(path, exist_ok=True)
+        filename = os.path.join(path, "%s.json"%record_name)
+        with open(filename, "w+") as f:
+            json.dump(eval_results, f, indent=4)
+            f.flush()
 
     def load_hparams(self):
         filename = os.path.join(self.path, "hparams.yaml")
@@ -61,16 +74,40 @@ class Logger:
         return len(self.list_all_records())
 
     def list_all_records(self):
-        list_records = os.listdir(os.path.join(self.path, "runs"))
-        return [os.path.splitext(filename)[0] for filename in list_records]
+        path = os.path.join(self.path, "runs")
+        list_records = []
+        if os.path.exists(path):
+            list_records = os.listdir(path)
+            list_records = [os.path.splitext(filename)[0] for filename in list_records]
+        return list_records
 
+    def list_all_eval_models(self):
+        path = os.path.join(self.path, "eval", "*/*")
+        return glob.glob(path)
+  
+    def list_all_hist(self):
+        path = os.path.join(self.path, "hist", "*/*")
+        return glob.glob(path)
+
+    def reset(self):
+        path = os.path.join(self.path, "runs")
+        if os.path.exists(path):
+            shutil.rmtree(path)
+        path = os.path.join(self.path, "eval")
+        if os.path.exists(path):
+            shutil.rmtree(path)
+        path = os.path.join(self.path, "hist")
+        if os.path.exists(path):
+            shutil.rmtree(path)
+        
     @staticmethod
     def list_all_logger(path):
-        list_exp_id = os.listdir(path)
+        list_exp_id = glob.glob(os.path.join(path, "*"))
+        list_exp_id = [os.path.basename(path) for path in list_exp_id]
         return list_exp_id
 
     @staticmethod
-    def list_all_runs(path):
+    def list_all_eval(path):
         return glob.glob(os.path.join(path, "*"))
 
     @staticmethod
@@ -85,8 +122,25 @@ class Logger:
             return True
         return False
 
+    def check_hist_exist(self, model_name, record_name):
+        filename = os.path.join(self.path, "hist", model_name, "%s.json"%record_name)
+        if os.path.exists(filename):
+            return True
+        return False
+
     def check_eval_done(self, model_name):
         path = os.path.join(self.path, "eval", model_name)
+        if os.path.exists(path):
+            list_dir = os.listdir(path)
+        else:
+            return False
+        
+        if len(list_dir) == len(self.list_all_records()):
+            return True
+        return False
+
+    def check_hist_done(self, model_name):
+        path = os.path.join(self.path, "hist", model_name)
         if os.path.exists(path):
             list_dir = os.listdir(path)
         else:

@@ -54,5 +54,8 @@ def load_cifar_classifier(model_type: CifarModel, name: str = None, model_dir: s
     
     if eval:
         model.eval()
+
+    # Hack to be able to use some attacker class
+    model.num_classes = 10
         
     return model.to(device)

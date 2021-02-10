@@ -3,8 +3,9 @@ from online_attacks.classifiers import load_dataset, load_classifier, DatasetTyp
 from online_attacks.datastream import datastream
 from online_attacks.attacks import create_attacker, compute_attack_success_rate
 from online_attacks.online_algorithms import AlgorithmType, create_algorithm, compute_indices, compute_competitive_ratio
-from online_attacks.scripts.online_attacks_sweep import OnlineAttackExp, Params
-from online_attacks.launcher import Launcher
+from online_attacks.scripts.online_attacks_sweep import create_params
+from online_attacks.scripts.online_attack_params import OnlineAttackParams
+from online_attacks.launcher import Launcher, SlurmLauncher
 from omegaconf import OmegaConf
 from torch.nn import CrossEntropyLoss
 from collections import defaultdict
@@ -14,12 +15,12 @@ import torch
 import tqdm
 
 
-def eval_comp_ratio(logger, model_type, model_name, effective=False, return_latex=True):
+def eval_comp_ratio(logger, model_type, model_name, list_records=None):
     dir_name = os.path.join(model_type.value, model_name)
 
     params = logger.load_hparams()    
-    params = OmegaConf.structured(Params(**params))
-    params = OnlineAttackExp.create_params(params)
+    params = OmegaConf.structured(OnlineAttackParams(**params))
+    params = create_params(params)
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     
@@ -45,7 +46,8 @@ def eval_comp_ratio(logger, model_type, model_name, effective=False, return_late
     stream = target_stream.subset(indices)
     offline_fool_rate, knapsack_offline = compute_attack_success_rate(stream, CrossEntropyLoss(reduction="sum"))        
     
-    list_records = logger.list_all_records()
+    if list_records is None:
+        list_records = logger.list_all_records()
     for record_name in tqdm.tqdm(list_records):
         if logger.check_eval_results_exist(dir_name, record_name):
             #print("Ignoring %s/%s, already exists."%(dir_name, record_name))
@@ -74,32 +76,33 @@ def eval_comp_ratio(logger, model_type, model_name, effective=False, return_late
         logger.save_eval_results(eval_results, dir_name, record_name)
 
 
-parser = argparse.ArgumentParser()
-parser.add_argument("path", type=str)
-parser.add_argument("--dataset", default=DatasetType.MNIST, type=DatasetType, choices=DatasetType)
-args, _ = parser.parse_known_args()
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("path", type=str)
+    parser.add_argument("--dataset", default=DatasetType.MNIST, type=DatasetType, choices=DatasetType)
+    args, _ = parser.parse_known_args()
 
-parser.add_argument("--slurm", type=str, default="")
-if args.dataset == DatasetType.MNIST:
-    parser.add_argument("--model_type", nargs="+", default=MnistModel, type=MnistModel, choices=MnistModel)
-elif args.dataset == DatasetType.CIFAR:
-    parser.add_argument("--model_type", nargs="+", default=CifarModel, type=CifarModel, choices=CifarModel)
-parser.add_argument("--model_name", nargs="+", default=["all"], type=str)
-args = parser.parse_args()
+    parser.add_argument("--slurm", type=str, default="")
+    if args.dataset == DatasetType.MNIST:
+        parser.add_argument("--model_type", nargs="+", default=MnistModel, type=MnistModel, choices=MnistModel)
+    elif args.dataset == DatasetType.CIFAR:
+        parser.add_argument("--model_type", nargs="+", default=CifarModel, type=CifarModel, choices=CifarModel)
+    parser.add_argument("--model_name", nargs="+", default=["all"], type=str)
+    args = parser.parse_args()
 
-launcher = Launcher(eval_comp_ratio, slurm=args.slurm, checkpointing=True)
-list_exp_id = Logger.list_all_logger(args.path)
-for model_type in args.model_type:
-    model_name_list = args.model_name
-    if "all" in args.model_name:
-        list_files = os.listdir(os.path.join(Params().model_dir, args.dataset.value, model_type.value))
-        model_name_list = [os.path.splitext(filename)[0] for filename in list_files]
-    for model_name in model_name_list:
-        dir_name = os.path.join(model_type.value, model_name)
-        print("Evaluating on %s"%dir_name)
-        for exp_id in list_exp_id:
-            logger = Logger(args.path, exp_id)
-            if logger.check_eval_done(dir_name):
-                continue
-            else:
-                launcher.launch(logger, model_type, model_name)
+    launcher = Launcher(SlurmLauncher(eval_comp_ratio,  checkpointing=True), slurm=args.slurm)
+    list_exp_id = Logger.list_all_logger(args.path)
+    for model_type in args.model_type:
+        model_name_list = args.model_name
+        if "all" in args.model_name:
+            list_files = os.listdir(os.path.join(OnlineAttackParams().model_dir, args.dataset.value, model_type.value))
+            model_name_list = [os.path.splitext(filename)[0] for filename in list_files]
+        for model_name in model_name_list:
+            dir_name = os.path.join(model_type.value, model_name)
+            print("Evaluating on %s"%dir_name)
+            for exp_id in list_exp_id:
+                logger = Logger(args.path, exp_id)
+                if logger.check_eval_done(dir_name):
+                    continue
+                else:
+                    launcher.launch(logger, model_type, model_name)

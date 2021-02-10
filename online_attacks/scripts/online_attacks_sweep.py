@@ -1,54 +1,51 @@
 from dataclasses import dataclass
 import torch
 from torch.nn import CrossEntropyLoss
-from omegaconf import OmegaConf, MISSING
+from omegaconf import OmegaConf
 import tqdm
-from typing import Any
+import os
+import submitit
 
 from online_attacks.classifiers import load_dataset, DatasetType, load_classifier, MnistModel, CifarModel
-from online_attacks.attacks import create_attacker, Attacker, AttackerParams
+from online_attacks.attacks import create_attacker, Attacker
 from online_attacks.datastream import datastream
-from online_attacks.online_algorithms import create_algorithm, OnlineParams, compute_indices, AlgorithmType
-from online_attacks.utils.logger import Logger, config_exists
+from online_attacks.online_algorithms import create_algorithm, compute_indices, AlgorithmType
+from online_attacks.utils.logger import Logger
 from online_attacks.utils import seed_everything
+from online_attacks.launcher import Launcher
+from online_attacks.scripts.online_attack_params import OnlineAttackParams, CifarParams, MnistParams
 
 
-@dataclass
-class Params:
-    name: str = "default"
-    dataset: DatasetType = MISSING
-    model_name: str = MISSING
-    model_type: Any = MISSING
-    model_dir: str = "/checkpoint/hberard/OnlineAttack/pretained_models/"
-    attacker_type: Attacker = MISSING
-    attacker_params: AttackerParams = AttackerParams()
-    online_params: OnlineParams = OnlineParams(exhaust=True)
-    save_dir: str = "/checkpoint/hberard/OnlineAttack/results_icml/${name}"
-    seed: int = 1234
-    batch_size: int = 1000
+def config_exists(config):
+    if os.path.exists(config.save_dir):
+        list_paths = os.listdir(config.save_dir)
+    else:
+        return None
+
+    for exp_id in list_paths:
+        logger = Logger(save_dir=config.save_dir, exp_id=exp_id)
+        other_config = logger.load_hparams()
+        params = OmegaConf.structured(OnlineAttackParams)
+        other_config = OmegaConf.merge(params, other_config)
+        other_config = create_params(other_config)
+        if config == other_config:
+            print("Found existing config with id=%s"%logger.exp_id)
+            return logger.exp_id
+    return None
 
 
-@dataclass
-class CifarParams(Params):
-    model_type: CifarModel = MISSING
-
-
-@dataclass
-class MnistParams(Params):
-    model_type: MnistModel = MISSING
+def create_params(params):
+    if params.dataset == DatasetType.CIFAR:
+        params = OmegaConf.structured(CifarParams(**params))
+        params.attacker_params.eps = 0.03125
+    elif params.dataset == DatasetType.MNIST:
+        params = OmegaConf.structured(MnistParams(**params))
+        params.attacker_params.eps = 0.3
+    return params
 
 
 class OnlineAttackExp:
-    @staticmethod
-    def create_params(params):
-        if params.dataset == DatasetType.CIFAR:
-            params = OmegaConf.structured(CifarParams(**params))
-        if params.dataset == DatasetType.MNIST:
-            params = OmegaConf.structured(MnistParams(**params))
-        return params
-
-    @staticmethod
-    def run(params: Params, num_runs: int = 1):
+    def __call__(self, params: OnlineAttackParams, num_runs: int = 1, max_num_runs: bool = True, overwrite=False):
         seed_everything(params.seed)
         
         exp_id = config_exists(params)
@@ -56,7 +53,11 @@ class OnlineAttackExp:
         if exp_id is None:
             logger.save_hparams(params)
         
-        num_runs -= len(logger) 
+        if overwrite:
+            logger.reset()
+        
+        if max_num_runs:
+            num_runs -= len(logger) 
             
         device = "cuda" if torch.cuda.is_available() else "cpu"
         dataset = load_dataset(params.dataset, train=False)
@@ -69,21 +70,27 @@ class OnlineAttackExp:
                                         datastream.ClassifierTransform(source_classifier), datastream.LossTransform(CrossEntropyLoss(reduction="none"))])
         
         algorithm = create_algorithm(params.online_params.online_type, params.online_params, N=len(dataset))
-
-        
+  
+        list_records = []
         for i in tqdm.tqdm(range(num_runs)):
             permutation = permutation_gen.sample()
             source_stream = datastream.BatchDataStream(dataset, batch_size=params.batch_size, transform=transform, permutation=permutation)
             indices = compute_indices(source_stream, algorithm, pbar_flag=False)
             record = {"permutation": permutation.tolist(), "indices": indices}
-            logger.save_record(record)
+            record_id = logger.save_record(record)
+            list_records.append(record_id)
+
+        return logger, list_records
+
+    def checkpoint(self, params: OnlineAttackParams, num_runs: int = 1, max_num_runs: bool = True, overwrite=False) -> submitit.helpers.DelayedSubmission:
+        return submitit.helpers.DelayedSubmission(params, num_runs, max_num_runs, overwrite=False)  # submits to requeuing
 
 
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", default=DatasetType.MNIST, type=DatasetType, choices=DatasetType)
-    parser.add_argument("--model_name", default="0", type=str)
+    parser.add_argument("--model_name", default="train_0", type=str)
     parser.add_argument("--attacker_type", default=Attacker.FGSM_ATTACK, type=Attacker, choices=Attacker)
     parser.add_argument("--batch_size", default=1000, type=int)
     parser.add_argument("--name", default="default", type=str)
@@ -97,15 +104,19 @@ if __name__ == "__main__":
         parser.add_argument("--model_type", default=CifarModel.VGG_16, type=CifarModel, choices=CifarModel)
     args, _ = parser.parse_known_args()
     
-    params = OmegaConf.structured(Params(**vars(args)))
-    params = OnlineAttackExp.create_params(params)
+    params = OmegaConf.structured(OnlineAttackParams(**vars(args)))
+    params = create_params(params)
 
     # Hack to be able to parse num_runs without affecting params
     parser.add_argument("--num_runs", default=100, type=int)
+    parser.add_argument("--slurm", type=str, default="")
+    parser.add_argument("--overwrite", action="store_true")
     args = parser.parse_args()
  
-    for k in [10, 100, 1000]:
+    launcher = Launcher(OnlineAttackExp(), args.slurm)
+
+    for k in [2, 10, 100, 1000]:
         params.online_params.K = k
         params.online_params.online_type = list(AlgorithmType)
-        OnlineAttackExp.run(params, args.num_runs)
+        launcher.launch(params, args.num_runs, overwrite=args.overwrite)
 

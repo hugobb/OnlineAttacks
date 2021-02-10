@@ -20,7 +20,7 @@ class NoAttacker(Attack):
         return x
 
 
-def create_attacker(classifier: Module, attacker_type: Attacker,  params: AttackerParams) -> Attack:
+def create_attacker(classifier: Module, attacker_type: Attacker,  params: AttackerParams = AttackerParams()) -> Attack:
     if attacker_type == Attacker.PGD_ATTACK:
         from .pgd import make_pgd_attacker, PGDParams
         params = PGDParams(**params)

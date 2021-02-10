@@ -39,25 +39,9 @@ class SlurmLauncher:
         else:
             pass
 
-
-class Launcher:
-    def __init__(self, run=None, slurm="", checkpointing=False):
-        self.run = run
-        self.slurm = slurm
-        self.checkpointing = checkpointing
-
-    def launch(self, *args, **kwargs):
-        if self.slurm:
-            create_dedicated_execution_folder()
-            self.run_on_slurm(*args, **kwargs)
-        else:
-            self.run_locally(*args, **kwargs)
-
-    def run_locally(self, *args, **kwargs):
-        self.run(*args, **kwargs)
-
-    def run_on_slurm(self, *args, **kwargs):
-        slurm_config = OmegaConf.load(self.slurm)
+    @staticmethod
+    def init_slurm(slurm):
+        slurm_config = OmegaConf.load(slurm)
         nb_gpus = slurm_config.get("gpus_per_node", 1)
         mem_by_gpu = slurm_config.get("mem_by_gpu", 60)
         log_folder = slurm_config["log_folder"]
@@ -72,8 +56,38 @@ class Launcher:
                                    cpus_per_task=slurm_config.get("cpus_per_task", 10),
                                    tasks_per_node=nb_gpus,
                                    gpus_per_node=nb_gpus,
-                                   mem_gb=mem_by_gpu * nb_gpus,)
+                                   mem_gb=mem_by_gpu * nb_gpus,
+                                   slurm_array_parallelism=slurm_config.get("slurm_array_parallelism", 100))
+        return executor
 
-        slurm_launcher = SlurmLauncher(self.run, self.checkpointing)
-        job = executor.submit(slurm_launcher, *args, **kwargs)
-        print(f"{job.job_id}")
+
+class Launcher:
+    def __init__(self, run=None, slurm=""):
+        self.run = run
+        self.slurm = slurm
+
+        if slurm:
+            create_dedicated_execution_folder()
+            self.executor = SlurmLauncher.init_slurm(slurm)
+        else:
+            self.executor = submitit.LocalExecutor(".logs")  
+
+    def batch_launch(self, args):
+        if self.slurm:
+            self.executor.map_array(self.run, args)
+        else:
+            for a in args:
+                self.run_locally(a)
+             
+    def launch(self, *args, **kwargs):
+        if self.slurm:       
+            self.run_on_slurm(*args, **kwargs)
+        else:
+            self.run_locally(*args, **kwargs)
+
+    def run_locally(self, *args, **kwargs):
+        self.run(*args, **kwargs)
+
+    def run_on_slurm(self, *args, **kwargs):
+        job = self.executor.submit(self.run, *args, **kwargs)
+        print(job.job_id)

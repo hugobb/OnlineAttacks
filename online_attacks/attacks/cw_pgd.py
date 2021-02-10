@@ -1,7 +1,6 @@
 from advertorch.attacks import CarliniWagnerL2Attack
 from torch.nn import Module
 from dataclasses import dataclass
-from omegaconf import OmegaConf
 from .params import AttackerParams
 
 

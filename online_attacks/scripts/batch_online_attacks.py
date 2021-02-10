@@ -6,7 +6,8 @@ from online_attacks.classifiers import MnistModel, DatasetType, CifarModel
 from online_attacks.attacks import Attacker
 from online_attacks.online_algorithms import AlgorithmType
 from online_attacks.launcher import Launcher
-from online_attacks.scripts.online_attacks_sweep import OnlineAttackExp, Params
+from online_attacks.scripts.online_attacks_sweep import OnlineAttackExp, create_params
+from online_attacks.scripts.online_attack_params import Params
 
 
 if __name__ == "__main__":
@@ -39,7 +40,7 @@ if __name__ == "__main__":
         for model_name in list_models:
             model_name = os.path.splitext(model_name)[0]
             params.model_name = model_name
-            conf = OnlineAttackExp.create_params(params)
+            conf = create_params(params)
             for k in [10, 100, 1000]:
                 conf.online_params.K = k
                 conf.online_params.online_type = list(AlgorithmType)
