@@ -7,6 +7,7 @@ class AlgorithmType(Enum):
     STOCHASTIC_VIRTUAL = "stochastic_virtual"
     STOCHASTIC_OPTIMISTIC = "stochastic_optimistic"
     STOCHASTIC_MODIFIED_VIRTUAL = "stochastic_modified_virtual"
+    STOCHASTIC_VIRTUAL_REF = "stochastic_virtual_ref"
     STOCHASTIC_SINGLE_REF = "stochastic_single_ref"
     RANDOM = "random"
 

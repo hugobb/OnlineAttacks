@@ -2,7 +2,6 @@ from .base import Algorithm, AlgorithmType
 from typing import Optional
 import numpy as np
 
-
 class StochasticModifiedVirtual(Algorithm):
     def __init__(self, N: int, k: int, threshold: Optional[int] = None, exhaust: bool = False):
         """ Construct Stochastic Virtual
@@ -14,7 +13,7 @@ class StochasticModifiedVirtual(Algorithm):
         """
         super().__init__(k)
         self.N = N
-        
+
         if threshold is None:
             threshold = np.floor(N / np.e)
         self.threshold = threshold
@@ -53,7 +52,8 @@ class StochasticModifiedVirtual(Algorithm):
                 self.R = self.R[:self.k]
 
 
+
 if __name__ == "__main__":
-    algorithm = StochasticModifiedVirtual(10, 1, 5)
+    algorithm = StochasticVirtualRef(10, 1, 5)
     algorithm.reset()
     algorithm.action(1, 1)

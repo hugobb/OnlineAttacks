@@ -3,6 +3,7 @@ from .offline_algorithm import OfflineAlgorithm
 from .stochastic_virtual import StochasticVirtual
 from .stochastic_optimistic import StochasticOptimistic
 from .stochastic_modified_virtual import StochasticModifiedVirtual
+from .stochastic_virtual_ref import StochasticVirtualRef
 from .stochastic_single_ref import StochasticSingleRef
 from .base import Algorithm, RandomAlgorithm, AlgorithmType
 
@@ -36,6 +37,10 @@ def create_algorithm(online_type: Union[AlgorithmType, List[AlgorithmType]], par
         elif alg_type == AlgorithmType.STOCHASTIC_MODIFIED_VIRTUAL:
             algorithm = StochasticModifiedVirtual(params.N, params.K, params.threshold,
                     params.exhaust)
+        elif alg_type == AlgorithmType.STOCHASTIC_VIRTUAL_REF:
+            algorithm = StochasticVirtualRef(params.N, params.K,
+                                             params.reference_rank,
+                                             params.threshold, params.exhaust)
         elif alg_type == AlgorithmType.STOCHASTIC_SINGLE_REF:
             algorithm = StochasticSingleRef(params.N, params.K,
                                             params.reference_rank, params.threshold,

@@ -31,6 +31,7 @@ def toy_dataset(N, max_perms=120):
     return train_loader
 
 def run_experiment(args, K, train_loader):
+    ipdb.set_trace()
     offline_algorithm, online_algorithm = create_online_algorithm(args, args.online_type, args.N, K)
     num_perms = len(train_loader)
     comp_ratio_list = []

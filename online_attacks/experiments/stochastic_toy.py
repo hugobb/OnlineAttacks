@@ -14,6 +14,7 @@ from online_attacks.datastream import ToyDatastream, ToyDatastream_Stochastic
 from online_attacks.utils.parser import ArgumentParser
 
 def run_experiment(params: OnlineParams, train_loader: Dataset, knapsack:bool):
+    ipdb.set_trace()
     offline_algorithm, online_algorithm = create_online_algorithm(params)
     num_perms = len(train_loader)
     comp_ratio_list, online_knapsack_list = [], []
@@ -21,8 +22,8 @@ def run_experiment(params: OnlineParams, train_loader: Dataset, knapsack:bool):
         offline_dataset, online_dataset = dataset[0], dataset[1]
         indices = compute_indices(online_dataset, [online_algorithm, offline_algorithm])
         comp_ratio_list.append(compute_competitive_ratio(indices[online_algorithm.name], indices[offline_algorithm.name]))
-        if i % 10 == 0:
-            print("K is %d while num in S is %d" %(params.K, len(online_algorithm.S)))
+        # if i % 10 == 0:
+            # print("K is %d while num in S is %d" %(params.K, len(online_algorithm.S)))
 
         if knapsack:
             offline_value = sum([x[0] for x in indices[offline_algorithm.name]])
@@ -52,6 +53,8 @@ def main():
                         help='Std for noise')
     parser.add_argument('--max_perms', type=int, default=120, metavar='P',
                         help='Maximum number of perms of the data stream')
+    parser.add_argument('--threshold', type=int, default=None, metavar='T',
+                        help='Manual Threshold')
     parser.add_argument('--seed', type=int, metavar='S',
                         help='random seed (default: None)')
     parser.add_argument("--exhaust", action="store_true", default=False,
@@ -67,6 +70,8 @@ def main():
     args = parser.parse_args()
     args.dev = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     seed_everything(args.seed)
+    if args.threshold is not None:
+        args.online_params.threshold = args.threshold
 
     if os.path.isfile("settings.json"):
         with open('settings.json') as f:
@@ -77,16 +82,16 @@ def main():
         os.environ['WANDB_API_KEY'] = args.wandb_apikey
         wandb.init(project='Online-Attacks',
                    name='Online-Attack-{}-{}'.format("toy", args.namestr))
+    ipdb.set_trace()
     train_loader = ToyDatastream_Stochastic(args.online_params.N, args.max_perms, args.eps)
     args.online_params.exhaust = args.exhaust
-    for k in range(1, args.K+1):
-        args.online_params.K = k
-        comp_ratio = run_experiment(args.online_params, train_loader, args.knapsack)
-        if args.wandb:
-            model_name = "Competitive Ratio " + args.online_params.online_type.value
-            if args.knapsack:
-                model_name = "Knapsack Competitive Ratio " + args.online_params.online_type.value
-            wandb.log({model_name: comp_ratio, "K": k})
+    args.online_params.K = args.K
+    comp_ratio = run_experiment(args.online_params, train_loader, args.knapsack)
+    if args.wandb:
+        model_name = "Competitive Ratio " + args.online_params.online_type[0].value
+        if args.knapsack:
+            model_name = "Knapsack Competitive Ratio " + args.online_params.online_type[0].value
+        wandb.log({model_name: comp_ratio, "K": k})
 
 
 if __name__ == '__main__':
