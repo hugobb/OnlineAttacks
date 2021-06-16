@@ -16,7 +16,7 @@ class StochasticVirtual(Algorithm):
         self.N = N
 
         if threshold is None:
-            threshold = np.floor(N / np.e)
+            threshold = np.floor(N*0.38)
         self.threshold = threshold
 
         self.R = []

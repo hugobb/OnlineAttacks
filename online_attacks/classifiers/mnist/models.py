@@ -128,6 +128,9 @@ def load_mnist_classifier(model_type: MnistModel, name: str = None, model_dir: s
             model = load_madry_model("mnist", filename)
         else:
             raise OSError("File %s not found !"%filename)
+        
+        # Hack to be able to use some attacker class
+        model.num_classes = 10
 
     elif model_type in __mnist_model_dict__:
         model = make_mnist_model(model_type)

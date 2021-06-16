@@ -6,7 +6,7 @@ import numpy as np
 
 
 class BatchDataStream:
-    def __init__(self, dataset: Dataset, batch_size: int = 1, transform=None, permutation=None):
+    def __init__(self, dataset: Dataset, batch_size: int = 1, transform=None, permutation=None, return_target=False):
         self.dataset = dataset
         if permutation is not None:
             self.dataset = PermuteDataset(self.dataset, permutation=permutation) 
@@ -14,12 +14,16 @@ class BatchDataStream:
         self.dataloader = DataLoader(self.dataset, batch_size=batch_size, shuffle=False)
         self.transform = transform
         self.batch_size = batch_size
+        self.return_target = return_target
 
     def __iter__(self):
         for x, target in self.dataloader:
             if self.transform is not None:
                 x, target = self.transform(x, target)
-            yield x
+            if self.return_target:
+                yield x, target
+            else:
+                yield x
 
     def __len__(self):
         return len(self.dataloader)

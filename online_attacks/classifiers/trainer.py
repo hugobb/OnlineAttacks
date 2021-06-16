@@ -33,7 +33,7 @@ class Trainer:
         for batch_idx, (data, target) in enumerate(self.train_loader):
             data, target = data.to(self.device), target.to(self.device)
             if not isinstance(self.attacker, NoAttacker):
-                with ctx_noparamgrad_and_eval(self.attacker):
+                with ctx_noparamgrad_and_eval(self.attacker.predict):
                     data = self.attacker.perturb(data, target)
             
             self.optimizer.zero_grad()

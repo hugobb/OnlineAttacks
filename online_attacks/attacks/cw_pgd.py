@@ -1,7 +1,6 @@
 from advertorch.attacks import CarliniWagnerL2Attack
 from torch.nn import Module
 from dataclasses import dataclass
-from omegaconf import OmegaConf
 from .params import AttackerParams
 
 
@@ -10,7 +9,7 @@ class CWParams(AttackerParams):
     confidence: float = 0
     learning_rate: float = 0.01
     binary_search_steps: int = 9
-    max_iterations: int = 100
+    max_iterations: int = 10000
     abort_early: bool = True
     initial_const: float = 0.001
 

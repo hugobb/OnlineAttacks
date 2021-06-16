@@ -15,40 +15,45 @@ import ipdb
 @dataclass
 class OnlineParams:
     online_type: List[AlgorithmType] = field(default_factory=lambda: [AlgorithmType.STOCHASTIC_VIRTUAL])
-    N: int = 5
+    N: int = 5 # Here for backward compatibility
     K: int = 1
     reference_rank: Optional[int] = None # This in only used by Single-Ref
     threshold: Optional[int] = None # This will be reset in create_online_algorithm
     exhaust: bool = False # Exhaust K
 
 
-def create_algorithm(online_type: Union[AlgorithmType, List[AlgorithmType]], params: OnlineParams = OnlineParams()):
+def create_algorithm(online_type: Union[AlgorithmType, List[AlgorithmType]], params: OnlineParams = OnlineParams(), N: Optional[int] = None):
     if isinstance(online_type, AlgorithmType):
         online_type = (online_type, )
+
+    # Here for backward compatibility
+    if N is None:
+        print("Warning: OnlineParams.N will be removed in future version. You need to directly pass N to the function instead.")
+        N = params.N
 
     list_algorithms = []
     for alg_type in online_type:
         if alg_type == AlgorithmType.STOCHASTIC_VIRTUAL:
-            algorithm = StochasticVirtual(params.N, params.K, params.threshold,
+            algorithm = StochasticVirtual(N, params.K, params.threshold,
                     params.exhaust)
         elif alg_type == AlgorithmType.STOCHASTIC_OPTIMISTIC:
-            algorithm = StochasticOptimistic(params.N, params.K, params.threshold,
+            algorithm = StochasticOptimistic(N, params.K, params.threshold,
                     params.exhaust)
         elif alg_type == AlgorithmType.STOCHASTIC_MODIFIED_VIRTUAL:
-            algorithm = StochasticModifiedVirtual(params.N, params.K, params.threshold,
+            algorithm = StochasticModifiedVirtual(N, params.K, params.threshold,
                     params.exhaust)
         elif alg_type == AlgorithmType.STOCHASTIC_VIRTUAL_REF:
             algorithm = StochasticVirtualRef(params.N, params.K,
                                              params.reference_rank,
                                              params.threshold, params.exhaust)
         elif alg_type == AlgorithmType.STOCHASTIC_SINGLE_REF:
-            algorithm = StochasticSingleRef(params.N, params.K,
+            algorithm = StochasticSingleRef(N, params.K,
                                             params.reference_rank, params.threshold,
                                             params.exhaust)
         elif alg_type == AlgorithmType.OFFLINE:
             algorithm = OfflineAlgorithm(params.K)
         elif alg_type == AlgorithmType.RANDOM:
-            algorithm = RandomAlgorithm(params.N, params.K)
+            algorithm = RandomAlgorithm(N, params.K)
         else:
             raise ValueError(f"Unknown online algo type: '{alg_type}'.")
 
@@ -57,8 +62,8 @@ def create_algorithm(online_type: Union[AlgorithmType, List[AlgorithmType]], par
     return list_algorithms
 
 
-def create_online_algorithm(params: OnlineParams = OnlineParams()) -> (Algorithm, Algorithm):
-    return create_algorithm([AlgorithmType.OFFLINE] + list(params.online_type), params)
+def create_online_algorithm(params: OnlineParams = OnlineParams(), N: Optional[int] = None) -> (Algorithm, Algorithm):
+    return create_algorithm([AlgorithmType.OFFLINE] + list(params.online_type), params, N)
 
 
 def compute_indices(data_stream: Iterable, algorithm_list: Union[Algorithm, List[Algorithm]], pbar_flag=False) -> Union[Iterable, List[Iterable]]:

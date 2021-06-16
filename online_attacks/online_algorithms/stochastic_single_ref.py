@@ -25,7 +25,7 @@ class StochasticSingleRef(Algorithm):
         if k in cls.C_DEFAULT:
             return cls.C_DEFAULT[k]
         elif k > 100:
-            return 0.13 # This is a guess based on the values ffrom the paper
+            return 0.13  # This is a guess based on the values ffrom the paper
         else:
             return cls.C_DEFAULT["default"]
 
@@ -34,7 +34,7 @@ class StochasticSingleRef(Algorithm):
         if k in cls.R_DEFAULT:
             return cls.R_DEFAULT[k]
         elif k > 100:
-            return int(10 + 0.5*(math.sqrt(1 + 4*(k - 96) - 1))) # This is an heuristic somewhat interpolating the other values for k > 100
+            return int(10 + 0.5*(math.sqrt(1 + 4*(k - 96) - 1)))  # This is an heuristic somewhat interpolating the other values for k > 100
         else:
             return 1
 
