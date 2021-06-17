@@ -22,7 +22,7 @@ class StochasticVirtualRef(Algorithm):
 
         self.R = []
         self.sampling_phase = True
-        self.exhaust = exhaust
+        self.exhaust = False#exhaust
         self.name = AlgorithmType.STOCHASTIC_VIRTUAL_REF.name
 
     def reset(self):
@@ -35,7 +35,7 @@ class StochasticVirtualRef(Algorithm):
             self.R.append([value, index])
             self.R.sort(key=lambda tup: tup[0], reverse=True)  # sorts in place
             # self.R = self.R[:self.l]
-            # self.R = self.R[:self.k+1]
+            self.R = self.R[:self.k]
 
             if index >= self.threshold:
                 self.sampling_phase = False
@@ -52,7 +52,7 @@ class StochasticVirtualRef(Algorithm):
                 self.S.append([value, index])
                 self.R.append([value, index])
                 self.R.sort(key=lambda tup: tup[0], reverse=True)  # sorts in place
-                # self.R = self.R[:self.l]
+                self.R = self.R[:self.k]
                 # Update L
                 self.l = min(self.k-1, self.l + 1)
 

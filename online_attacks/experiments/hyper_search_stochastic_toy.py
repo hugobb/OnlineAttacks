@@ -60,34 +60,35 @@ def run_experiment(params: OnlineParams, train_loader: Dataset, knapsack:bool):
     return comp_ratio
 
 
-# def main():
-    # online_params = OnlineParams
-    # online_params.online_type = [AlgorithmType.STOCHASTIC_VIRTUAL_REF]
-    # online_params.exhaust = True
-    # online_params.K = K
-    # online_params.N = N
-    # online_params.reference_rank = L
-    # online_params.threshold = None
-    # train_loader = ToyDatastream_Stochastic(online_params.N, max_perms, eps)
-    # comp_ratio = run_experiment(online_params, train_loader, knapsack)
-    # return comp_ratio
+def main():
+    online_params = OnlineParams
+    online_params.online_type = [AlgorithmType.STOCHASTIC_VIRTUAL_REF]
+    online_params.exhaust = True
+    online_params.K = K
+    online_params.N = N
+    online_params.reference_rank = 25
+    online_params.threshold = 0.2*N
+    # ipdb.set_trace()
+    train_loader = ToyDatastream_Stochastic(online_params.N, max_perms, eps)
+    comp_ratio = run_experiment(online_params, train_loader, knapsack)
+    return comp_ratio
 
 
 if __name__ == '__main__':
-    # main()
-    study = optuna.create_study(direction="maximize")
-    study.optimize(objective, n_trials=1000)
+    main()
+    # study = optuna.create_study(direction="maximize")
+    # study.optimize(objective, n_trials=1000)
 
-    # complete_trials = study.get_trials(deepcopy=False, states=[TrialState.COMPLETE])
+    # # complete_trials = study.get_trials(deepcopy=False, states=[TrialState.COMPLETE])
 
-    print("Study statistics: ")
-    print("  Number of finished trials: ", len(study.trials))
+    # print("Study statistics: ")
+    # print("  Number of finished trials: ", len(study.trials))
 
-    print("Best trial:")
-    trial = study.best_trial
+    # print("Best trial:")
+    # trial = study.best_trial
 
-    print("  Value: ", trial.value)
+    # print("  Value: ", trial.value)
 
-    print("  Params: ")
-    for key, value in trial.params.items():
-        print("    {}: {}".format(key, value))
+    # print("  Params: ")
+    # for key, value in trial.params.items():
+        # print("    {}: {}".format(key, value))
