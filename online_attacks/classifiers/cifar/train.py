@@ -1,7 +1,11 @@
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
 import torch.nn as nn
 import torch
 from typing import Optional
-import torch.optim as optim
 import os
 from .params import CifarTrainingParams
 from .dataset import create_cifar_loaders

@@ -1,3 +1,8 @@
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
 from .mnist import load_mnist_classifier, MnistModel, load_mnist_dataset
 from .cifar import load_cifar_classifier, CifarModel, load_cifar_dataset
 from .dataset import DatasetType
