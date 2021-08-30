@@ -1,4 +1,10 @@
-from online_attacks.classifiers import CifarModel, MnistModel, DatasetType, load_classifier, load_dataset
+from online_attacks.classifiers import (
+    CifarModel,
+    MnistModel,
+    DatasetType,
+    load_classifier,
+    load_dataset,
+)
 from online_attacks.attacks import Attacker, AttackerParams, create_attacker
 from online_attacks import datastream
 import argparse
@@ -25,7 +31,7 @@ class Logger:
 
     def save_hist(self, hist):
         os.makedirs(self.path, exist_ok=True)
-        filename = os.path.join(self.path, "hist.json")   
+        filename = os.path.join(self.path, "hist.json")
         with open(filename, "w+") as f:
             json.dump(hist, f)
             f.flush()
@@ -60,7 +66,7 @@ class Logger:
             other_config = logger.load_config()
             other_config = OmegaConf.to_yaml(other_config)
             if config == other_config:
-                print("Found existing config with id=%s"%logger.config_id)
+                print("Found existing config with id=%s" % logger.config_id)
                 return True
         return False
 
@@ -68,20 +74,42 @@ class Logger:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("output_path")
-    parser.add_argument("--dataset", default=DatasetType.MNIST, type=DatasetType, choices=DatasetType)
+    parser.add_argument(
+        "--dataset", default=DatasetType.MNIST, type=DatasetType, choices=DatasetType
+    )
     parser.add_argument("--source_model_name", default="train_0", type=str)
     parser.add_argument("--target_model_name", default=None, type=str)
-    parser.add_argument("--attacker", default=Attacker.NONE, type=Attacker, choices=Attacker)
+    parser.add_argument(
+        "--attacker", default=Attacker.NONE, type=Attacker, choices=Attacker
+    )
     parser.add_argument("--batch_size", default=1000, type=int)
-    parser.add_argument("--model_dir", default='/checkpoint/hberard/OnlineAttack/pretained_models/', type=str)
+    parser.add_argument(
+        "--model_dir",
+        default="/checkpoint/hberard/OnlineAttack/pretained_models/",
+        type=str,
+    )
     args, _ = parser.parse_known_args()
 
     if args.dataset == DatasetType.MNIST:
-        parser.add_argument("--source_model_type", default=MnistModel.MODEL_A, type=MnistModel, choices=MnistModel)
-        parser.add_argument("--target_model_type", default=None, type=MnistModel, choices=MnistModel)
+        parser.add_argument(
+            "--source_model_type",
+            default=MnistModel.MODEL_A,
+            type=MnistModel,
+            choices=MnistModel,
+        )
+        parser.add_argument(
+            "--target_model_type", default=None, type=MnistModel, choices=MnistModel
+        )
     elif args.dataset == DatasetType.CIFAR:
-        parser.add_argument("--source_model_type", default=CifarModel.VGG_16, type=CifarModel, choices=CifarModel)
-        parser.add_argument("--target_model_type", default=None, type=CifarModel, choices=CifarModel)
+        parser.add_argument(
+            "--source_model_type",
+            default=CifarModel.VGG_16,
+            type=CifarModel,
+            choices=CifarModel,
+        )
+        parser.add_argument(
+            "--target_model_type", default=None, type=CifarModel, choices=CifarModel
+        )
 
     args = parser.parse_args()
 
@@ -100,8 +128,6 @@ if __name__ == "__main__":
 
     config = OmegaConf.create(vars(args))
     config.attacker_params = attacker_params
-    
-    
 
     if Logger.check_config_exists(args.output_path, config):
         exit()
@@ -110,18 +136,39 @@ if __name__ == "__main__":
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    target_classifier = load_classifier(args.dataset, args.target_model_type, name=args.target_model_name, model_dir=args.model_dir, device=device, eval=True)
-    source_classifier = load_classifier(args.dataset, args.source_model_type, name=args.source_model_name, model_dir=args.model_dir, device=device, eval=True)    
+    target_classifier = load_classifier(
+        args.dataset,
+        args.target_model_type,
+        name=args.target_model_name,
+        model_dir=args.model_dir,
+        device=device,
+        eval=True,
+    )
+    source_classifier = load_classifier(
+        args.dataset,
+        args.source_model_type,
+        name=args.source_model_name,
+        model_dir=args.model_dir,
+        device=device,
+        eval=True,
+    )
     attacker = create_attacker(source_classifier, args.attacker, attacker_params)
 
-    transform = datastream.Compose([datastream.ToDevice(device), datastream.AttackerTransform(attacker)])
+    transform = datastream.Compose(
+        [datastream.ToDevice(device), datastream.AttackerTransform(attacker)]
+    )
 
     dataset = load_dataset(args.dataset, train=False)
-    datastream = datastream.BatchDataStream(dataset, batch_size=args.batch_size, transform=transform, return_target=True)
+    datastream = datastream.BatchDataStream(
+        dataset, batch_size=args.batch_size, transform=transform, return_target=True
+    )
 
     loss = CrossEntropyLoss(reduction="none")
 
-    hist = {"source": {"loss": [], "correct": []}, "target": {"loss": [], "correct": []}}
+    hist = {
+        "source": {"loss": [], "correct": []},
+        "target": {"loss": [], "correct": []},
+    }
     for x, target in tqdm.tqdm(datastream):
         target_x = target_classifier(x)
         pred = target_x.max(1, keepdim=True)[1]

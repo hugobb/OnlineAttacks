@@ -7,6 +7,7 @@ from typing import Union
 # TODO: Fix the import to be more clean !
 import sys
 import os
+
 path = os.path.realpath(os.path.join(os.getcwd(), ".."))
 sys.path.append(path)
 from online_attacks.classifiers.dataset import DatasetType
@@ -19,25 +20,29 @@ from online_attacks.classifiers.mnist.models import MnistModel
 class TrainClassifier(Launcher):
     @classmethod
     def run(cls, args):
-        device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+        device = (
+            torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+        )
         if args.dataset == DatasetType.MNIST:
-            import online_attacks.classifiers.mnist as mnist    
+            import online_attacks.classifiers.mnist as mnist
+
             params = OmegaConf.structured(mnist.TrainingParams)
             params.model_type = args.model_type
             params.train_on_test = args.train_on_test
             params.name = ""
             if args.robust:
                 params.attacker = Attacker.PGD_ATTACK
-                params.name = "%s_"%params.attacker.name
+                params.name = "%s_" % params.attacker.name
             params.name += "test_" if params.train_on_test else "train_"
             params.name += str(args.name)
 
             if args.model_attacker is not None:
                 params.model_attacker = args.model_attacker
             mnist.train(params, device=device)
-        
+
         elif args.dataset == DatasetType.CIFAR:
             import online_attacks.classifiers.cifar as cifar
+
             params = OmegaConf.structured(cifar.TrainingParams)
             params.model_type = args.model_type
             if params.model_type in [CifarModel.GOOGLENET, CifarModel.WIDE_RESNET]:
@@ -50,7 +55,7 @@ class TrainClassifier(Launcher):
             params.name = ""
             if args.robust:
                 params.attacker = Attacker.PGD_ATTACK
-                params.name = "%s_"%params.attacker.name
+                params.name = "%s_" % params.attacker.name
             params.name += "test_" if params.train_on_test else "train_"
             params.name += str(args.name)
 
@@ -64,14 +69,31 @@ class TrainClassifier(Launcher):
     @staticmethod
     def create_argument_parser() -> argparse.ArgumentParser:
         parser = argparse.ArgumentParser()
-        parser.add_argument("--dataset", default=DatasetType.MNIST, type=DatasetType, choices=DatasetType)
+        parser.add_argument(
+            "--dataset",
+            default=DatasetType.MNIST,
+            type=DatasetType,
+            choices=DatasetType,
+        )
 
-        # Hack to be able to parse either MnistModel or CifarModel 
+        # Hack to be able to parse either MnistModel or CifarModel
         args, _ = parser.parse_known_args()
         if args.dataset == DatasetType.MNIST:
-            parser.add_argument("--model_type", nargs='+', default=MnistModel.MODEL_A, type=MnistModel, choices=MnistModel)
+            parser.add_argument(
+                "--model_type",
+                nargs="+",
+                default=MnistModel.MODEL_A,
+                type=MnistModel,
+                choices=MnistModel,
+            )
         elif args.dataset == DatasetType.CIFAR:
-            parser.add_argument("--model_type", nargs='+', default=CifarModel.VGG_16, type=CifarModel, choices=CifarModel)
+            parser.add_argument(
+                "--model_type",
+                nargs="+",
+                default=CifarModel.VGG_16,
+                type=CifarModel,
+                choices=CifarModel,
+            )
 
         parser.add_argument("--train_on_test", action="store_true")
         parser.add_argument("--num_models", default=1, type=int)

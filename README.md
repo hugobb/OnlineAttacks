@@ -13,7 +13,7 @@ Some scripts might not work otherwise.
 
 
 ## Command to run Toy experiment
-The import might not work, and myabe need to add current directory to `PYTHONPATH`
+The import might not work, and maybe need to add current directory to `PYTHONPATH`
 `python online_attacks/experiments/toy.py --online_params.online_type stochastic_optimistic --online_params.N 100 --max_perms 1000 --K 10 `
 
 ## Command to run Mnist experiment (work in progress)

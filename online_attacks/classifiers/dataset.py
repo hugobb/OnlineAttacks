@@ -1,6 +1,5 @@
 from enum import Enum
 from dataclasses import dataclass
-from omegaconf import MISSING
 
 
 class DatasetType(Enum):

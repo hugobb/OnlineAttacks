@@ -112,40 +112,53 @@ class modelD(nn.Module):
         return x
 
 
-__mnist_model_dict__ = {MnistModel.MODEL_A: modelA, MnistModel.MODEL_B: modelB,
-                        MnistModel.MODEL_C: modelC, MnistModel.MODEL_D: modelD}
+__mnist_model_dict__ = {
+    MnistModel.MODEL_A: modelA,
+    MnistModel.MODEL_B: modelB,
+    MnistModel.MODEL_C: modelC,
+    MnistModel.MODEL_D: modelD,
+}
 
 
 def make_mnist_model(model: MnistModel) -> nn.Module:
     return __mnist_model_dict__[model]()
 
 
-def load_mnist_classifier(model_type: MnistModel, name: str = None, model_dir: str = None, device=None, eval=False) -> nn.Module:
+def load_mnist_classifier(
+    model_type: MnistModel,
+    name: str = None,
+    model_dir: str = None,
+    device=None,
+    eval=False,
+) -> nn.Module:
     if model_type == MnistModel.MADRY_MODEL:
         from online_attacks.classifiers.madry import load_madry_model
-        filename = os.path.join(model_dir, "mnist", model_type.value, "%s"%name)
+
+        filename = os.path.join(model_dir, "mnist", model_type.value, "%s" % name)
         if os.path.exists(filename):
             model = load_madry_model("mnist", filename)
         else:
-            raise OSError("File %s not found !"%filename)
-        
+            raise OSError("File %s not found !" % filename)
+
         # Hack to be able to use some attacker class
         model.num_classes = 10
 
     elif model_type in __mnist_model_dict__:
         model = make_mnist_model(model_type)
         if name is not None:
-            filename = os.path.join(model_dir, "mnist", model_type.value, "%s.pth"%name)
+            filename = os.path.join(
+                model_dir, "mnist", model_type.value, "%s.pth" % name
+            )
             if os.path.exists(filename):
-                state_dict = torch.load(filename, map_location=torch.device('cpu'))
+                state_dict = torch.load(filename, map_location=torch.device("cpu"))
                 model.load_state_dict(state_dict)
             else:
-                raise OSError("File %s not found !"%filename)
+                raise OSError("File %s not found !" % filename)
 
     else:
         raise ValueError()
-    
+
     if eval:
         model.eval()
-        
+
     return model.to(device)

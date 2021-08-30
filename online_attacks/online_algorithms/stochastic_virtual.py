@@ -4,7 +4,9 @@ import numpy as np
 
 
 class StochasticVirtual(Algorithm):
-    def __init__(self, N: int, k: int, threshold: Optional[int] = None, exhaust: bool = False):
+    def __init__(
+        self, N: int, k: int, threshold: Optional[int] = None, exhaust: bool = False
+    ):
         """ Construct Stochastic Virtual
         Parameters:
             N (int)           -- number of data points
@@ -16,7 +18,7 @@ class StochasticVirtual(Algorithm):
         self.N = N
 
         if threshold is None:
-            threshold = np.floor(N*0.38)
+            threshold = np.floor(N * 0.38)
         self.threshold = threshold
 
         self.R = []
@@ -33,7 +35,7 @@ class StochasticVirtual(Algorithm):
         if self.sampling_phase:
             self.R.append([value, index])
             self.R.sort(key=lambda tup: tup[0], reverse=True)  # sorts in place
-            self.R = self.R[:self.k]
+            self.R = self.R[: self.k]
 
             if index >= self.threshold:
                 self.sampling_phase = False
@@ -53,11 +55,11 @@ class StochasticVirtual(Algorithm):
                 self.S.append([value, index])
                 self.R.append([value, index])
                 self.R.sort(key=lambda tup: tup[0], reverse=True)  # sorts in place
-                self.R = self.R[:self.k]
+                self.R = self.R[: self.k]
             elif value > k_value and k_index > self.threshold:
                 self.R.append([value, index])
                 self.R.sort(key=lambda tup: tup[0], reverse=True)  # sorts in place
-                self.R = self.R[:self.k]
+                self.R = self.R[: self.k]
 
 
 if __name__ == "__main__":

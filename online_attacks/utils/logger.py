@@ -18,7 +18,7 @@ def config_exists(config):
         other_config = logger.load_hparams()
         other_config = OmegaConf.merge(config, other_config)
         if config == other_config:
-            print("Found existing config with id=%s"%logger.exp_id)
+            print("Found existing config with id=%s" % logger.exp_id)
             return logger.exp_id
     return None
 
@@ -38,7 +38,7 @@ class Logger:
     def save_record(self, record):
         record_id = str(uuid.uuid4())
         os.makedirs(os.path.join(self.path, "runs"), exist_ok=True)
-        filename = os.path.join(self.path, "runs/%s.json"%(record_id))
+        filename = os.path.join(self.path, "runs/%s.json" % (record_id))
         with open(filename, "w+") as f:
             json.dump(record, f, indent=4)
             f.flush()
@@ -47,7 +47,8 @@ class Logger:
     def save_eval_results(self, eval_results, model_name, record_name):
         path = os.path.join(self.path, "eval", model_name)
         os.makedirs(path, exist_ok=True)
-        filename = os.path.join(path, "%s.json"%record_name)
+        filename = os.path.join(path, "%s.json" % record_name)
+        print("Saving eval results under %s" % filename)
         with open(filename, "w+") as f:
             json.dump(eval_results, f, indent=4)
             f.flush()
@@ -55,7 +56,7 @@ class Logger:
     def save_hist(self, eval_results, model_name, record_name):
         path = os.path.join(self.path, "hist", model_name)
         os.makedirs(path, exist_ok=True)
-        filename = os.path.join(path, "%s.json"%record_name)
+        filename = os.path.join(path, "%s.json" % record_name)
         with open(filename, "w+") as f:
             json.dump(eval_results, f, indent=4)
             f.flush()
@@ -84,7 +85,7 @@ class Logger:
     def list_all_eval_models(self):
         path = os.path.join(self.path, "eval", "*/*")
         return glob.glob(path)
-  
+
     def list_all_hist(self):
         path = os.path.join(self.path, "hist", "*/*")
         return glob.glob(path)
@@ -99,7 +100,7 @@ class Logger:
         path = os.path.join(self.path, "hist")
         if os.path.exists(path):
             shutil.rmtree(path)
-        
+
     @staticmethod
     def list_all_logger(path):
         list_exp_id = glob.glob(os.path.join(path, "*"))
@@ -117,13 +118,13 @@ class Logger:
         return record
 
     def check_eval_results_exist(self, model_name, record_name):
-        filename = os.path.join(self.path, "eval", model_name, "%s.json"%record_name)
+        filename = os.path.join(self.path, "eval", model_name, "%s.json" % record_name)
         if os.path.exists(filename):
             return True
         return False
 
     def check_hist_exist(self, model_name, record_name):
-        filename = os.path.join(self.path, "hist", model_name, "%s.json"%record_name)
+        filename = os.path.join(self.path, "hist", model_name, "%s.json" % record_name)
         if os.path.exists(filename):
             return True
         return False
@@ -134,7 +135,7 @@ class Logger:
             list_dir = os.listdir(path)
         else:
             return False
-        
+
         if len(list_dir) == len(self.list_all_records()):
             return True
         return False
@@ -145,7 +146,7 @@ class Logger:
             list_dir = os.listdir(path)
         else:
             return False
-        
+
         if len(list_dir) == len(self.list_all_records()):
             return True
         return False

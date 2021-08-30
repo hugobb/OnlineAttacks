@@ -1,10 +1,19 @@
 from .base import Algorithm, AlgorithmType
 from typing import Optional
 import numpy as np
-import ipdb
+
 
 class StochasticVirtualRef(Algorithm):
-    def __init__(self, N: int, k: int, l: int, threshold: Optional[int] = None, exhaust: bool = False):
+    DEFAULT_RANK = 1
+
+    def __init__(
+        self,
+        N: int,
+        k: int,
+        l: Optional[int] = None,
+        threshold: Optional[int] = None,
+        exhaust: bool = False,
+    ):
         """ Construct Stochastic Virtual
         Parameters:
             N (int)                 -- number of data points
@@ -16,13 +25,16 @@ class StochasticVirtualRef(Algorithm):
         super().__init__(k)
         self.N = N
         self.l = l
+        if self.l is None:
+            self.l = self.DEFAULT_RANK
+
         if threshold is None:
             threshold = np.floor(N / np.e)
         self.threshold = threshold
 
         self.R = []
         self.sampling_phase = True
-        self.exhaust = False#exhaust
+        self.exhaust = False  # exhaust
         self.name = AlgorithmType.STOCHASTIC_VIRTUAL_REF.name
 
     def reset(self):
@@ -35,7 +47,7 @@ class StochasticVirtualRef(Algorithm):
             self.R.append([value, index])
             self.R.sort(key=lambda tup: tup[0], reverse=True)  # sorts in place
             # self.R = self.R[:self.l]
-            self.R = self.R[:self.k]
+            self.R = self.R[: self.k]
 
             if index >= self.threshold:
                 self.sampling_phase = False
@@ -44,7 +56,11 @@ class StochasticVirtualRef(Algorithm):
             num_picked = len(self.S)
             num_left_to_pick = self.k - num_picked
             num_samples_left = self.N - index
-            if num_samples_left <= num_left_to_pick and self.exhaust and num_left_to_pick > 0:
+            if (
+                num_samples_left <= num_left_to_pick
+                and self.exhaust
+                and num_left_to_pick > 0
+            ):
                 # Just Pick the last samples to exhaust K
                 self.S.append([value, index])
             elif value > l_value and num_left_to_pick > 0:
@@ -52,9 +68,9 @@ class StochasticVirtualRef(Algorithm):
                 self.S.append([value, index])
                 self.R.append([value, index])
                 self.R.sort(key=lambda tup: tup[0], reverse=True)  # sorts in place
-                self.R = self.R[:self.k]
+                self.R = self.R[: self.k]
                 # Update L
-                self.l = min(self.k-1, self.l + 1)
+                self.l = min(self.k - 1, self.l + 1)
 
 
 if __name__ == "__main__":

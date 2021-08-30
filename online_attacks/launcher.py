@@ -22,7 +22,7 @@ def create_dedicated_execution_folder():
     for folder in ["configs", "online_attacks", "data"]:
         shutil.copytree(current_path.joinpath(folder), run_folder.joinpath(folder))
     os.chdir(run_folder)
-    sys.path = [str(run_folder)] + sys.path[1:] 
+    sys.path = [str(run_folder)] + sys.path[1:]
 
 
 class SlurmLauncher:
@@ -33,9 +33,13 @@ class SlurmLauncher:
     def __call__(self, *args, **kwargs):
         self.run(*args, **kwargs)
 
-    def checkpoint(self, *args: Any, **kwargs: Any) -> submitit.helpers.DelayedSubmission:
+    def checkpoint(
+        self, *args: Any, **kwargs: Any
+    ) -> submitit.helpers.DelayedSubmission:
         if self.checkpointing:
-            return submitit.helpers.DelayedSubmission(self, *args, **kwargs)  # submits to requeuing
+            return submitit.helpers.DelayedSubmission(
+                self, *args, **kwargs
+            )  # submits to requeuing
         else:
             pass
 
@@ -47,17 +51,19 @@ class SlurmLauncher:
         log_folder = slurm_config["log_folder"]
 
         executor = submitit.AutoExecutor(folder=log_folder)
-        executor.update_parameters(slurm_partition=slurm_config.get("partition", ""),
-                                   slurm_comment=slurm_config.get("comment", ""),
-                                   slurm_constraint=slurm_config.get("gpu_type", ""),
-                                   slurm_time=slurm_config.get("time_in_min", 30),
-                                   timeout_min=slurm_config.get("time_in_min", 30),
-                                   nodes=slurm_config.get("nodes", 1),
-                                   cpus_per_task=slurm_config.get("cpus_per_task", 10),
-                                   tasks_per_node=nb_gpus,
-                                   gpus_per_node=nb_gpus,
-                                   mem_gb=mem_by_gpu * nb_gpus,
-                                   slurm_array_parallelism=slurm_config.get("slurm_array_parallelism", 100))
+        executor.update_parameters(
+            slurm_partition=slurm_config.get("partition", ""),
+            slurm_comment=slurm_config.get("comment", ""),
+            slurm_constraint=slurm_config.get("gpu_type", ""),
+            slurm_time=slurm_config.get("time_in_min", 30),
+            timeout_min=slurm_config.get("time_in_min", 30),
+            nodes=slurm_config.get("nodes", 1),
+            cpus_per_task=slurm_config.get("cpus_per_task", 10),
+            tasks_per_node=nb_gpus,
+            gpus_per_node=nb_gpus,
+            mem_gb=mem_by_gpu * nb_gpus,
+            slurm_array_parallelism=slurm_config.get("slurm_array_parallelism", 100),
+        )
         return executor
 
 
@@ -70,7 +76,7 @@ class Launcher:
             create_dedicated_execution_folder()
             self.executor = SlurmLauncher.init_slurm(slurm)
         else:
-            self.executor = submitit.LocalExecutor(".logs")  
+            self.executor = submitit.LocalExecutor(".logs")
 
     def batch_launch(self, args):
         if self.slurm:
@@ -78,9 +84,9 @@ class Launcher:
         else:
             for a in args:
                 self.run_locally(a)
-             
+
     def launch(self, *args, **kwargs):
-        if self.slurm:       
+        if self.slurm:
             self.run_on_slurm(*args, **kwargs)
         else:
             self.run_locally(*args, **kwargs)

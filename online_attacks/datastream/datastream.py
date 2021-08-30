@@ -6,10 +6,17 @@ import numpy as np
 
 
 class BatchDataStream:
-    def __init__(self, dataset: Dataset, batch_size: int = 1, transform=None, permutation=None, return_target=False):
+    def __init__(
+        self,
+        dataset: Dataset,
+        batch_size: int = 1,
+        transform=None,
+        permutation=None,
+        return_target=False,
+    ):
         self.dataset = dataset
         if permutation is not None:
-            self.dataset = PermuteDataset(self.dataset, permutation=permutation) 
+            self.dataset = PermuteDataset(self.dataset, permutation=permutation)
 
         self.dataloader = DataLoader(self.dataset, batch_size=batch_size, shuffle=False)
         self.transform = transform
@@ -31,7 +38,9 @@ class BatchDataStream:
     def subset(self, index, batch_size=None):
         if batch_size is None:
             batch_size = self.batch_size
-        dataloader = DataLoader(self.dataset, batch_size=batch_size, sampler=SubsetRandomSampler(index))
+        dataloader = DataLoader(
+            self.dataset, batch_size=batch_size, sampler=SubsetRandomSampler(index)
+        )
         for x, target in dataloader:
             if self.transform is not None:
                 x, target = self.transform(x, target)
@@ -42,7 +51,7 @@ class PermutationGenerator:
     def __init__(self, n, seed=1234):
         self.rng = np.random.default_rng(seed)
         self.n = n
-    
+
     def sample(self):
         return self.rng.permutation(self.n)
 
@@ -57,7 +66,7 @@ class PermuteDataset(Dataset):
         index = self.permutation[index]
         data, target = self.dataset[index]
         target = torch.Tensor([target]).long().squeeze()
-        
+
         return data, target
 
     def __len__(self) -> int:
@@ -86,7 +95,7 @@ class AttackerTransform:
     def __init__(self, attacker: Attack, target=False):
         self.attacker = attacker
         self.target = target
-    
+
     def __call__(self, data, target):
         if self.target:
             data = self.attacker.perturb(data, target)
@@ -98,7 +107,7 @@ class AttackerTransform:
 class ClassifierTransform:
     def __init__(self, classifier: nn.Module):
         self.classifier = classifier
-    
+
     def __call__(self, data, target):
         return self.classifier(data), target
 
@@ -106,7 +115,7 @@ class ClassifierTransform:
 class LossTransform:
     def __init__(self, criterion: nn.Module):
         self.criterion = criterion
-    
+
     def __call__(self, data, target):
         output = self.criterion(data, target)
         assert len(output) == len(data)

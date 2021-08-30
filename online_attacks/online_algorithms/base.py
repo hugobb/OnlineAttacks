@@ -29,7 +29,7 @@ class Algorithm:
 
 
 class RandomAlgorithm(Algorithm):
-    def __init__(self, N: int, k:int):
+    def __init__(self, N: int, k: int):
         super().__init__(k)
         self.N = N
         self.random_permutation = random.sample(range(self.N), self.k)

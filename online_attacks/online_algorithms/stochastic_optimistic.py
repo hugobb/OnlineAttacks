@@ -4,7 +4,9 @@ import numpy as np
 
 
 class StochasticOptimistic(Algorithm):
-    def __init__(self, N: int, k : int, threshold: Optional[int] = None, exhaust: bool = False):
+    def __init__(
+        self, N: int, k: int, threshold: Optional[int] = None, exhaust: bool = False
+    ):
         """ Construct Stochastic Optimistic
         Parameters:
             N (int)           -- number of data points
@@ -33,7 +35,7 @@ class StochasticOptimistic(Algorithm):
         if self.sampling_phase:
             self.R.append([value, index])
             self.R.sort(key=lambda tup: tup[0], reverse=True)  # sorts in place
-            self.R = self.R[:self.k]
+            self.R = self.R[: self.k]
 
             if index >= self.threshold:
                 self.sampling_phase = False

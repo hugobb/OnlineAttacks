@@ -16,16 +16,20 @@ class OptimizerParams:
     lr: float = 1e-3
 
 
-def create_optimizer(params, optimizer_params: OptimizerParams, n_batches_per_epoch: Optional[int] = None):
+def create_optimizer(
+    params, optimizer_params: OptimizerParams, n_batches_per_epoch: Optional[int] = None
+):
     if optimizer_params.optimizer_type == OptimizerType.SGD:
         from torch.optim import SGD
+
         return SGD(params, lr=optimizer_params.lr)
-    
+
     elif optimizer_params.optimizer_type == OptimizerType.ADAM:
         from torch.optim import Adam
+
         return Adam(params, lr=optimizer_params.lr)
 
-    elif optimizer_params.optimizer_type == OptimizerType.SLS: 
+    elif optimizer_params.optimizer_type == OptimizerType.SLS:
         if n_batches_per_epoch is None:
             return Sls(params)
         return Sls(params, n_batches_per_epoch=n_batches_per_epoch)
