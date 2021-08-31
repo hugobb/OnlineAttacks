@@ -1,4 +1,9 @@
 #!/bin/bash
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
 python -m online_attacks.experiments.toy --online_params.online_type stochastic_optimistic --wandb --online_params.N 100 --max_perms 10000 --K 20 --namestr Toy-Optimistic-10 --online_params.threshold 10
 python -m online_attacks.experiments.toy --online_params.online_type stochastic_optimistic --wandb --online_params.N 100 --max_perms 10000 --K 20 --namestr Toy-Optimistic-15 --online_params.threshold 15
 python -m online_attacks.experiments.toy --online_params.online_type stochastic_optimistic --wandb --online_params.N 100 --max_perms 10000 --K 20 --namestr Toy-Optimistic-20 --online_params.threshold 20
