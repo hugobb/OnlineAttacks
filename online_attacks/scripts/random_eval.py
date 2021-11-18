@@ -10,8 +10,8 @@ import glob
 import os
 import copy
 import submitit
-
-from online_attacks.classifiers import DatasetType, MnistModel, CifarModel
+import ipdb
+from online_attacks.classifiers import DatasetType, MnistModel, CifarModel, ImagenetModel
 from online_attacks.scripts.online_attacks_sweep import OnlineAttackExp, create_params
 from online_attacks.scripts.online_attack_params import OnlineAttackParams as Params
 from online_attacks.scripts.eval_all import eval_comp_ratio
@@ -26,6 +26,8 @@ def random_model(model_dir, dataset, pattern="train_*.pth"):
             model_type = random.choice(list(MnistModel))
         elif dataset == DatasetType.CIFAR:
             model_type = random.choice(list(CifarModel))
+        elif dataset == DatasetType.IMAGENET:
+            model_type = random.choice(list(ImagenetModel))
         else:
             raise ValueError("%s not in DatasetType" % dataset)
 
@@ -92,7 +94,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--attacker_type", default=Attacker.FGSM_ATTACK, type=Attacker, choices=Attacker
     )
-    parser.add_argument("--batch_size", default=1000, type=int)
+    parser.add_argument("--batch_size", default=32, type=int)
     parser.add_argument("--name", default="default", type=str)
     args, _ = parser.parse_known_args()
 
@@ -113,7 +115,9 @@ if __name__ == "__main__":
     elif args.dataset == DatasetType.CIFAR:
         num_runs = 5
         args.num_runs = int(args.num_runs / num_runs) + 1
-
+    elif args.dataset == DatasetType.IMAGENET:
+        num_runs = 5
+        args.num_runs = int(args.num_runs / num_runs) + 1
     run = Run(args.k, num_runs, args.same_model_type, args.pattern)
     launcher = Launcher(run, args.slurm)
     args = [copy.deepcopy(params)] * args.num_runs

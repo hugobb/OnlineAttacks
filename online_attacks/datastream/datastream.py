@@ -8,7 +8,7 @@ from torch import nn
 from advertorch.attacks import Attack
 import torch
 import numpy as np
-
+import ipdb
 
 class BatchDataStream:
     def __init__(
@@ -23,7 +23,8 @@ class BatchDataStream:
         if permutation is not None:
             self.dataset = PermuteDataset(self.dataset, permutation=permutation)
 
-        self.dataloader = DataLoader(self.dataset, batch_size=batch_size, shuffle=False)
+        self.dataloader = DataLoader(self.dataset, batch_size=batch_size,
+                shuffle=False, num_workers=4, pin_memory=True)
         self.transform = transform
         self.batch_size = batch_size
         self.return_target = return_target

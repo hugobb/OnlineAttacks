@@ -10,13 +10,14 @@ from dataclasses import dataclass
 class DatasetType(Enum):
     MNIST = "mnist"
     CIFAR = "cifar"
+    IMAGENET = "imagenet"
 
 
 @dataclass
 class DatasetParams:
     data_dir: str = "./data"
     batch_size: int = 256
-    test_batch_size: int = 512
+    test_batch_size: int = 256
     num_workers: int = 4
     shuffle: bool = True
     download: bool = True

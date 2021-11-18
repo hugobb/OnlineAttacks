@@ -10,7 +10,7 @@ from .stochastic_modified_virtual import StochasticModifiedVirtual
 from .stochastic_virtual_ref import StochasticVirtualRef
 from .stochastic_single_ref import StochasticSingleRef
 from .base import Algorithm, RandomAlgorithm, AlgorithmType
-
+import ipdb
 from dataclasses import dataclass, field
 from typing import Iterable, List, Union, Optional
 import tqdm
@@ -90,7 +90,7 @@ def create_online_algorithm(
 def compute_indices(
     data_stream: Iterable,
     algorithm_list: Union[Algorithm, List[Algorithm]],
-    pbar_flag=False,
+    pbar_flag=True,
 ) -> Union[Iterable, List[Iterable]]:
     if isinstance(algorithm_list, Algorithm):
         algorithm_list = (algorithm_list,)

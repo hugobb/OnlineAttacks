@@ -9,13 +9,14 @@ from omegaconf import OmegaConf
 import tqdm
 import os
 import submitit
-
+import ipdb
 from online_attacks.classifiers import (
     load_dataset,
     DatasetType,
     load_classifier,
     MnistModel,
     CifarModel,
+    ImagenetModel,
 )
 from online_attacks.attacks import create_attacker, Attacker
 from online_attacks.datastream import datastream
@@ -30,6 +31,7 @@ from online_attacks.launcher import Launcher
 from online_attacks.scripts.online_attack_params import (
     OnlineAttackParams,
     CifarParams,
+    ImagenetParams,
     MnistParams,
 )
 
@@ -59,6 +61,9 @@ def create_params(params):
     elif params.dataset == DatasetType.MNIST:
         params = OmegaConf.structured(MnistParams(**params))
         params.attacker_params.eps = 0.3
+    elif params.dataset == DatasetType.IMAGENET:
+        params = OmegaConf.structured(ImagenetParams(**params))
+        params.attacker_params.eps = 0.03125
     return params
 
 
@@ -85,9 +90,14 @@ class OnlineAttackExp:
 
         device = "cuda" if torch.cuda.is_available() else "cpu"
         dataset = load_dataset(params.dataset, train=False)
+        # if not params.dataset == DatasetType.IMAGENET:
         permutation_gen = datastream.PermutationGenerator(
             len(dataset), seed=params.seed
         )
+        # else:
+            # permutation_gen = datastream.PermutationGenerator(
+                # len(dataset.dataset), seed=params.seed
+            # )
 
         source_classifier = load_classifier(
             params.dataset,

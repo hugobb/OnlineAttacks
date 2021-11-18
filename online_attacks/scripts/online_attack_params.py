@@ -7,7 +7,7 @@ from omegaconf import MISSING
 from dataclasses import dataclass
 from typing import Any
 
-from online_attacks.classifiers import DatasetType, MnistModel, CifarModel
+from online_attacks.classifiers import DatasetType, MnistModel, CifarModel, ImagenetModel
 from online_attacks.attacks import Attacker, AttackerParams
 from online_attacks.online_algorithms import OnlineParams
 
@@ -18,11 +18,11 @@ class OnlineAttackParams:
     dataset: DatasetType = MISSING
     model_name: str = MISSING
     model_type: Any = MISSING
-    model_dir: str = "/checkpoint/hberard/OnlineAttack/pretained_models/"
+    model_dir: str = "/checkpoint/joeybose/OnlineAttack/pretained_models/"
     attacker_type: Attacker = MISSING
     attacker_params: AttackerParams = AttackerParams()
     online_params: OnlineParams = OnlineParams(exhaust=True)
-    save_dir: str = "/checkpoint/hberard/OnlineAttack/results_icml/${name}"
+    save_dir: str = "/checkpoint/joeybose/OnlineAttack/results_iclr/${name}"
     seed: int = 1234
     batch_size: int = 1000
 
@@ -31,6 +31,9 @@ class OnlineAttackParams:
 class CifarParams(OnlineAttackParams):
     model_type: CifarModel = MISSING
 
+@dataclass
+class ImagenetParams(OnlineAttackParams):
+    model_type: ImagenetModel = MISSING
 
 @dataclass
 class MnistParams(OnlineAttackParams):

@@ -5,6 +5,7 @@
 
 from .mnist import load_mnist_classifier, MnistModel, load_mnist_dataset
 from .cifar import load_cifar_classifier, CifarModel, load_cifar_dataset
+from .imagenet import load_imagenet_classifier, ImagenetModel, load_imagenet_dataset
 from .dataset import DatasetType
 from torch.nn import Module
 from dataclasses import dataclass
@@ -12,7 +13,7 @@ from omegaconf import MISSING, OmegaConf
 from typing import Any
 import torch
 from torch.nn import CrossEntropyLoss
-
+import ipdb
 from online_attacks.attacks import (
     Attacker,
     AttackerParams,
@@ -40,7 +41,7 @@ def eval_classifier(
     target_model: ModelParams,
     attacker: AttackerConfig = AttackerConfig(),
     batch_size=1000,
-    model_dir="/checkpoint/hberard/OnlineAttack/pretained_models/",
+    model_dir="/checkpoint/joeybose/OnlineAttack/pretained_models/",
 ):
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -86,6 +87,8 @@ def load_dataset(dataset: DatasetType, train: bool = False):
         return load_mnist_dataset(train=train)
     elif dataset == DatasetType.CIFAR:
         return load_cifar_dataset(train=train)
+    elif dataset == DatasetType.IMAGENET:
+        return load_imagenet_dataset(train=train)
     else:
         raise ValueError()
 
@@ -106,6 +109,11 @@ def load_classifier(
     elif dataset == DatasetType.CIFAR:
         assert isinstance(model_type, CifarModel)
         return load_cifar_classifier(
+            model_type, name=name, model_dir=model_dir, device=device, eval=eval
+        )
+    elif dataset == DatasetType.IMAGENET:
+        assert isinstance(model_type, ImagenetModel)
+        return load_imagenet_classifier(
             model_type, name=name, model_dir=model_dir, device=device, eval=eval
         )
     else:
