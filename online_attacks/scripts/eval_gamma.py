@@ -86,6 +86,13 @@ def eval_comp_ratio(logger, model_type, model_name, list_records=None):
         algorithm[0].name
     ]
 
+    target_stream = datastream.BatchDataStream(
+        dataset, batch_size=params.batch_size, transform=target_transform
+    )
+    offline_indices = compute_indices(target_stream, algorithm, pbar_flag=False)[
+        algorithm[0].name
+    ]
+
     indices = [x[1] for x in offline_indices]
     target_stream = datastream.BatchDataStream(
         dataset, batch_size=params.batch_size, transform=transform
