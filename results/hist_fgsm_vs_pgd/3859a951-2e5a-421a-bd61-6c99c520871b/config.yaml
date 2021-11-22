@@ -1,0 +1,14 @@
+output_path: results/hist_fgsm_vs_pgd
+dataset: MNIST
+source_model_name: train_0
+target_model_name: train_1
+attacker: FGSM_ATTACK
+batch_size: 1000
+model_dir: /checkpoint/hberard/OnlineAttack/pretained_models/
+source_model_type: MODEL_A
+target_model_type: MODEL_A
+attacker_params:
+  eps: 0.3
+  clip_min: 0.0
+  clip_max: 1.0
+  targeted: false
