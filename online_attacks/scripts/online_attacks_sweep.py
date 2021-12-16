@@ -63,7 +63,7 @@ def create_params(params):
         params.attacker_params.eps = 0.3
     elif params.dataset == DatasetType.IMAGENET:
         params = OmegaConf.structured(ImagenetParams(**params))
-        params.attacker_params.eps = 0.03125
+        params.attacker_params.eps = .01567
     return params
 
 

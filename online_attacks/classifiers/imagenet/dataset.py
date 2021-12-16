@@ -23,26 +23,14 @@ def load_imagenet_dataset(
                                      std=[0.229, 0.224, 0.225])
 
     if train:
-        dataset_loader = torch.utils.data.DataLoader(
-            datasets.ImageFolder(traindir, transforms.Compose([
-                transforms.RandomSizedCrop(224),
-                transforms.RandomHorizontalFlip(),
-                transforms.ToTensor(),
-                normalize,
-            ])),
-            batch_size=params.batch_size, shuffle=True,
-            num_workers=params.num_workers, pin_memory=True)
+        imagenet_dataset = datasets.ImageFolder(traindir, transforms.Compose([
+            transforms.RandomSizedCrop(224), transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(), normalize, ]))
     else:
-        dataset_loader = torch.utils.data.DataLoader(
-            datasets.ImageFolder(valdir, transforms.Compose([
-                transforms.Scale(256),
-                transforms.CenterCrop(224),
-                transforms.ToTensor(),
-                normalize,
-            ])),
-            batch_size=params.test_batch_size, shuffle=False,
-            num_workers=params.num_workers, pin_memory=True)
-    return dataset_loader.dataset
+        imagenet_dataset =  datasets.ImageFolder(valdir, transforms.Compose([
+            transforms.Scale(256), transforms.CenterCrop(224),
+            transforms.ToTensor(), normalize, ]))
+    return imagenet_dataset
 
 def create_imagenet_loaders(
     params: DatasetParams = DatasetParams()
